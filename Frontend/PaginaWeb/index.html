@@ -1,0 +1,45 @@
+<!doctype html>
+<html translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="LogoEcommerce.jpg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elixir - Botillería Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Bootstrap recomendado para comp Elixir -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      /* Estilos del age gate */
+      #age-gate { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; }
+      #age-gate.show { display: flex; }
+      .ag-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
+      .ag-dialog { position: relative; background: #fff; padding: 22px; border-radius: 10px; max-width: 480px; width: 92%; box-shadow: 0 8px 30px rgba(0,0,0,0.35); text-align: center; }
+      .ag-actions { margin-top: 14px; display:flex; gap:10px; justify-content:center; }
+      .ag-actions .btn { min-width:120px; }
+      .ag-note { margin-top:10px; font-size:12px; color:#666; }
+    </style>
+  </head>
+  <body>
+
+    <!-- Age gate modal: INSERTAR aquí, antes de #root -->
+    <div id="age-gate" role="dialog" aria-modal="true" aria-labelledby="ag-title" tabindex="-1">
+      <div class="ag-backdrop" tabindex="-1"></div>
+      <div class="ag-dialog" role="document">
+        <h2 id="ag-title">¿Eres mayor de edad?</h2>
+        <p>Debes confirmar que eres mayor de edad para acceder a este sitio.</p>
+        <div class="ag-actions">
+          <button id="ag-yes" class="btn btn-success">Soy mayor</button>
+          <button id="ag-no" class="btn btn-secondary">No soy mayor</button>
+        </div>
+        <p class="ag-note">Tu elección se recordará 30 días en este navegador.</p>
+      </div>
+    </div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Añadir este script al final del body -->
+    <script src="./age-gate.js"></script>
+  </body>
+</html>
