@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum, Count
-from .models import Producto, Categoria, Cliente, Pedido, DetallesPedido
+from django.db import models
+from .models import Producto, Categoria, Cliente, Pedido, DetallesPedido, AuditLog
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.http import JsonResponse
 from .forms import RegistroClienteForm
 from django.core.mail import send_mail
@@ -59,9 +61,27 @@ def login_cliente(request):
                         rol = 'cliente'
                     fecha_nacimiento = None
                 
-                # Generar token simple
+                # Generar token simple y guardarlo en Cliente.api_token para autenticación por header
                 token = secrets.token_urlsafe(32)
-                
+                if cliente:
+                    cliente.api_token = token
+                    cliente.save()
+                else:
+                    # si no existe cliente creado previamente, crear uno para esta cuenta
+                    from datetime import date
+                    cliente, created = Cliente.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            'fecha_nacimiento': date(2000, 1, 1),
+                            'email_confirmado': True,
+                            'rol': rol,
+                            'api_token': token,
+                        }
+                    )
+                    if not created:
+                        cliente.api_token = token
+                        cliente.save()
+
                 return Response({
                     'success': True,
                     'message': 'Inicio de sesión exitoso',
@@ -94,6 +114,161 @@ def login_cliente(request):
     return Response({
         'error': 'Método no permitido'
     }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET'])
+def ventas_analiticas(request):
+    """Endpoint para HU13 - Analizar tendencias de ventas.
+    Query params:
+      period: daily|weekly|monthly|yearly (default monthly)
+      fecha_inicio, fecha_fin (ISO)
+      categoria_id, producto_id, vendedor_id
+      compare: '1' para enviar período anterior comparativo
+    Acceso: gerente y admin_sistema
+    """
+    # Permisos simples
+    # Intentar autenticar por sesión o por token en header
+    user = request.user
+    # DEBUG: mostrar info de autorización entrante para depuración
+    print('ventas_analiticas: request.user:', getattr(user, 'id', None), 'is_authenticated:', getattr(user, 'is_authenticated', False))
+    if not user or not user.is_authenticated:
+        # revisar header Authorization: Token <token>
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        print('ventas_analiticas: HTTP_AUTHORIZATION header:', auth_header[:100])
+        if auth_header and auth_header.startswith('Token '):
+            token = auth_header.split(' ', 1)[1].strip()
+            try:
+                cliente_token = Cliente.objects.get(api_token=token)
+                user = cliente_token.user
+                print('ventas_analiticas: token válido para user:', user.id)
+            except Cliente.DoesNotExist:
+                print('ventas_analiticas: token inválido')
+                user = None
+
+    if not user or not getattr(user, 'is_authenticated', False):
+        return Response({'success': False, 'message': 'No autenticado'}, status=status.HTTP_403_FORBIDDEN)
+    # verificar rol
+    try:
+        cliente = Cliente.objects.get(user=user)
+        if cliente.rol not in ('gerente', 'admin_sistema'):
+            return Response({'success': False, 'message': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+    except Cliente.DoesNotExist:
+        if not (user.is_staff or user.is_superuser):
+            return Response({'success': False, 'message': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+
+    period = request.GET.get('period', 'monthly')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    categoria_id = request.GET.get('categoria_id')
+    producto_id = request.GET.get('producto_id')
+    vendedor_id = request.GET.get('vendedor_id')
+    compare = request.GET.get('compare') == '1'
+
+    # Base queryset: detalles de pedidos cuya orden está pagada/enviado/entregado (ventas reales)
+    qs = DetallesPedido.objects.select_related('pedido', 'producto', 'producto__categoria', 'pedido__cliente')
+    qs = qs.exclude(pedido__estado__in=['pendiente', 'cancelado'])
+
+    # Filtrar por fechas
+    if fecha_inicio:
+        try:
+            dt = datetime.fromisoformat(fecha_inicio)
+            qs = qs.filter(pedido__fecha_pedido__gte=dt)
+        except Exception:
+            pass
+    if fecha_fin:
+        try:
+            dt = datetime.fromisoformat(fecha_fin)
+            qs = qs.filter(pedido__fecha_pedido__lte=dt)
+        except Exception:
+            pass
+
+    if categoria_id:
+        qs = qs.filter(producto__categoria_id=categoria_id)
+    if producto_id:
+        qs = qs.filter(producto_id=producto_id)
+    if vendedor_id:
+        qs = qs.filter(pedido__vendedor_id=vendedor_id)
+
+    # Elegir truncación por periodo
+    if period == 'daily':
+        trunc = TruncDay('pedido__fecha_pedido')
+    elif period == 'weekly':
+        trunc = TruncWeek('pedido__fecha_pedido')
+    elif period == 'yearly':
+        trunc = TruncYear('pedido__fecha_pedido')
+    else:
+        trunc = TruncMonth('pedido__fecha_pedido')
+
+    agregados = qs.annotate(period=trunc).values('period').annotate(total=Sum('subtotal')).order_by('period')
+
+    series = []
+    for a in agregados:
+        period_value = a['period']
+        series.append({'period': period_value.isoformat() if period_value else None, 'total': float(a['total'] or 0)})
+
+    # Breakdown por categoría y por producto (top 10)
+    by_category_qs = qs.values('producto__categoria__id', 'producto__categoria__nombre').annotate(total=Sum('subtotal')).order_by('-total')[:20]
+    by_category = [{'categoria_id': c['producto__categoria__id'], 'categoria': c['producto__categoria__nombre'], 'total': float(c['total'] or 0)} for c in by_category_qs]
+
+    by_product_qs = qs.values('producto__id', 'producto__nombre').annotate(total=Sum('subtotal')).order_by('-total')[:20]
+    by_product = [{'producto_id': p['producto__id'], 'producto': p['producto__nombre'], 'total': float(p['total'] or 0)} for p in by_product_qs]
+
+    # Totales para comparación si se solicita
+    compare_data = None
+    if compare and fecha_inicio and fecha_fin:
+        try:
+            start = datetime.fromisoformat(fecha_inicio)
+            end = datetime.fromisoformat(fecha_fin)
+            # calcular periodo anterior de igual duración
+            delta = end - start
+            prev_start = start - delta
+            prev_end = start
+            prev_qs = DetallesPedido.objects.select_related('pedido').exclude(pedido__estado__in=['pendiente', 'cancelado']).filter(pedido__fecha_pedido__gte=prev_start, pedido__fecha_pedido__lt=prev_end)
+            total_current = qs.aggregate(total=Sum('subtotal'))['total'] or 0
+            total_prev = prev_qs.aggregate(total=Sum('subtotal'))['total'] or 0
+            compare_data = {'current': float(total_current), 'previous': float(total_prev)}
+        except Exception:
+            compare_data = None
+
+    return Response({
+        'success': True,
+        'data': {
+            'series': series,
+            'by_category': by_category,
+            'by_product': by_product,
+            'compare': compare_data,
+        }
+    })
+
+
+@api_view(['GET'])
+def ventas_exportar(request):
+    """Exportar datos agregados de ventas a CSV (mismos params que ventas_analiticas)"""
+    # Reuse ventas_analiticas logic by calling it programmatically
+    response = ventas_analiticas(request)
+    if response.status_code != 200 or not response.data.get('success'):
+        return response
+
+    data = response.data['data']
+    import csv
+    from io import StringIO
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Periodo', 'Total'])
+    for s in data['series']:
+        writer.writerow([s.get('period'), s.get('total')])
+
+    writer.writerow([])
+    writer.writerow(['Categoria', 'Total'])
+    for c in data['by_category']:
+        writer.writerow([c.get('categoria'), c.get('total')])
+
+    output = si.getvalue()
+    from django.http import HttpResponse
+    response = HttpResponse(output, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="ventas_analiticas.csv"'
+    return response
 
 @api_view(['POST'])
 def registro_cliente(request):
@@ -831,7 +1006,7 @@ def mi_perfil(request):
 
 @api_view(['POST'])
 def marcar_pedido_pagado(request):
-    """Marcar un pedido como pagado (por vendedor/gerente)"""
+    """Marcar un pedido como pagado (por vendedor/gerente/admin)"""
     try:
         usuario_id = request.data.get('usuario_id')
         pedido_id = request.data.get('pedido_id')
@@ -842,14 +1017,17 @@ def marcar_pedido_pagado(request):
                 'message': 'usuario_id y pedido_id son requeridos'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        cliente = Cliente.objects.get(user_id=usuario_id)
+        user = User.objects.get(id=usuario_id)
         
-        # Solo vendedores y gerentes pueden marcar como pagado
-        if cliente.rol not in ['vendedor', 'gerente']:
-            return Response({
-                'success': False,
-                'message': 'Solo vendedores y gerentes pueden realizar esta acción'
-            }, status=status.HTTP_403_FORBIDDEN)
+        # Permitir superuser/staff (admin Django)
+        if not (user.is_superuser or user.is_staff):
+            cliente = Cliente.objects.get(user_id=usuario_id)
+            # Solo vendedores, gerentes y admin_sistema pueden marcar como pagado
+            if cliente.rol not in ['vendedor', 'gerente', 'admin_sistema']:
+                return Response({
+                    'success': False,
+                    'message': 'Solo vendedores, gerentes y administradores pueden realizar esta acción'
+                }, status=status.HTTP_403_FORBIDDEN)
         
         pedido = Pedido.objects.get(id=pedido_id)
         pedido.marcar_como_pagado()
@@ -1538,13 +1716,13 @@ def obtener_ventas_totales(request):
     """Obtener las ventas totales y métricas de ventas en tiempo real"""
     try:
         usuario_id = request.query_params.get('usuario_id')
-        
+
         if not usuario_id:
             return Response({
                 'success': False,
                 'message': 'usuario_id es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Verificar permisos
         cliente = Cliente.objects.get(user_id=usuario_id)
         if cliente.rol not in ['gerente', 'admin_sistema']:
@@ -1552,25 +1730,25 @@ def obtener_ventas_totales(request):
                 'success': False,
                 'message': 'No tienes permisos para ver estas métricas'
             }, status=status.HTTP_403_FORBIDDEN)
-        
+
         # Calcular métricas de ventas
         pedidos = Pedido.objects.all()
         # Incluir todos los pedidos excepto los cancelados
         pedidos_activos = pedidos.exclude(estado='cancelado')
-        
+
         total_ventas = pedidos_activos.aggregate(total=Sum('total'))['total'] or 0
         total_pedidos = pedidos.count()
         total_pedidos_pagados = pedidos_activos.count()
-        
+
         # Productos más vendidos
         productos_vendidos = DetallesPedido.objects.values('producto__nombre', 'producto__id').annotate(
             cantidad_total=Sum('cantidad'),
             ventas_total=Sum('subtotal')
         ).order_by('-cantidad_total')[:5]
-        
+
         # Conversión a lista
         productos_vendidos_list = list(productos_vendidos)
-        
+
         return Response({
             'success': True,
             'ventas': {
@@ -1580,7 +1758,7 @@ def obtener_ventas_totales(request):
                 'productos_vendidos': productos_vendidos_list
             }
         }, status=status.HTTP_200_OK)
-    
+
     except Cliente.DoesNotExist:
         return Response({
             'success': False,
@@ -1591,3 +1769,538 @@ def obtener_ventas_totales(request):
             'success': False,
             'message': f'Error: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def dashboard_admin_estadisticas(request):
+    """Endpoint específico para estadísticas del dashboard admin (sin necesidad de usuario_id)"""
+    try:
+        # Verificar autenticación por token
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+
+        # Verificar permisos de admin_sistema
+        if not _verificar_permisos_auditoria(usuario):
+            return Response({
+                'success': False,
+                'message': 'Acceso denegado. Solo administradores pueden ver estas estadísticas.'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Estadísticas de usuarios
+        total_usuarios = Cliente.objects.count()
+        usuarios_por_rol = {
+            'cliente': Cliente.objects.filter(rol='cliente').count(),
+            'vendedor': Cliente.objects.filter(rol='vendedor').count(),
+            'gerente': Cliente.objects.filter(rol='gerente').count(),
+            'admin_sistema': Cliente.objects.filter(rol='admin_sistema').count(),
+        }
+
+        # Estadísticas de pedidos y ventas
+        pedidos = Pedido.objects.all()
+        pedidos_activos = pedidos.exclude(estado='cancelado')
+        total_ventas = pedidos_activos.aggregate(total=Sum('total'))['total'] or 0
+        total_pedidos = pedidos.count()
+        total_pedidos_pagados = pedidos_activos.count()
+
+        # Estadísticas de productos
+        total_productos = Producto.objects.count()
+        productos_activos = Producto.objects.filter(activo=True).count()
+        productos_stock_bajo = Producto.objects.filter(stock__lte=models.F('stock_minimo')).count()
+
+        # Estadísticas de auditoría
+        total_logs = AuditLog.objects.count()
+
+        # Productos más vendidos (top 5)
+        productos_vendidos = DetallesPedido.objects.values(
+            'producto__nombre', 'producto__id'
+        ).annotate(
+            cantidad_total=Sum('cantidad'),
+            ventas_total=Sum('subtotal')
+        ).order_by('-cantidad_total')[:5]
+
+        productos_vendidos_list = list(productos_vendidos)
+
+        return Response({
+            'success': True,
+            'estadisticas': {
+                'usuarios': {
+                    'total': total_usuarios,
+                    'por_rol': usuarios_por_rol
+                },
+                'ventas': {
+                    'total_ventas': float(total_ventas),
+                    'total_pedidos': total_pedidos,
+                    'total_pedidos_pagados': total_pedidos_pagados
+                },
+                'productos': {
+                    'total': total_productos,
+                    'activos': productos_activos,
+                    'stock_bajo': productos_stock_bajo
+                },
+                'auditoria': {
+                    'total_logs': total_logs
+                },
+                'productos_vendidos': productos_vendidos_list
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ==================== AUDITORÍA Y TRAZABILIDAD ====================
+
+def _obtener_info_usuario(request):
+    """Obtiene usuario e información de IP/User-Agent de la request.
+
+    Soporta autenticación por:
+    - session (request.user)
+    - campo `user_id` en body (POST)
+    - header `Authorization: Token <token>` (busca Cliente.api_token)
+    """
+    usuario = None
+    ip_address = ""
+    user_agent = ""
+
+    # 1) Session Django
+    if request.user and request.user.is_authenticated:
+        usuario = request.user
+
+    # 2) Si no hay sesión, intentar token en header Authorization: Token <token>
+    if not usuario:
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        if auth_header and auth_header.startswith('Token '):
+            token = auth_header.split(' ', 1)[1].strip()
+            try:
+                cliente_token = Cliente.objects.get(api_token=token)
+                usuario = cliente_token.user
+            except Cliente.DoesNotExist:
+                usuario = None
+
+    # 3) Como fallback (por compatibilidad) permitir user_id en body/query
+    if not usuario:
+        user_id = None
+        if request.method == 'GET':
+            user_id = request.query_params.get('user_id') if hasattr(request, 'query_params') else request.GET.get('user_id')
+        else:
+            user_id = request.data.get('user_id') if hasattr(request, 'data') else request.POST.get('user_id')
+
+        if user_id:
+            try:
+                usuario = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                usuario = None
+
+    # Obtener IP del cliente
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip_address = x_forwarded_for.split(',')[0]
+    else:
+        ip_address = request.META.get('REMOTE_ADDR', '')
+
+    # Obtener User-Agent
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+    return usuario, ip_address, user_agent
+
+
+def _verificar_permisos_auditoria(usuario):
+    """Verifica si el usuario tiene permiso para ver auditoría (Gerente, Admin Sistema o Superuser)"""
+    if not usuario or not usuario.is_authenticated:
+        return False
+    
+    # Superuser y staff (Django admin) siempre tienen acceso
+    if usuario.is_superuser or usuario.is_staff:
+        return True
+    
+    # Verificar rol en Cliente
+    try:
+        cliente = Cliente.objects.get(user=usuario)
+        # Permitir gerente y admin_sistema
+        return cliente.rol in ['gerente', 'admin_sistema']
+    except Cliente.DoesNotExist:
+        return False
+
+
+@api_view(['GET', 'POST'])
+def listar_audit_logs(request):
+    """
+    API endpoint para listar logs de auditoría con filtros avanzados.
+    Acceso: Solo Gerente y Admin Sistema
+    
+    GET: Listar logs con filtros
+    Filtros disponibles:
+    - usuario_id: ID del usuario
+    - tipo_accion: crear, modificar, eliminar, estado, rol
+    - modelo: Producto, Pedido, Cliente, User
+    - fecha_inicio: Formato ISO 8601
+    - fecha_fin: Formato ISO 8601
+    - id_objeto: ID del objeto modificado
+    - descripcion: Búsqueda en descripción
+    - pagina: Número de página (default 1)
+    - items_por_pagina: Items por página (default 50, máximo 500)
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+        
+        # Verificar permisos
+        if not _verificar_permisos_auditoria(usuario):
+            return Response({
+                'success': False,
+                'message': 'Acceso denegado. Solo Gerentes y Administradores del Sistema pueden ver auditoría.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Obtener parámetros
+        datos = request.query_params if request.method == 'GET' else request.data
+        
+        # Construir queryset con filtros
+        queryset = AuditLog.objects.all()
+        
+        # Filtro por usuario
+        if datos.get('usuario_id'):
+            queryset = queryset.filter(usuario_id=datos.get('usuario_id'))
+        
+        # Filtro por tipo de acción
+        if datos.get('tipo_accion'):
+            queryset = queryset.filter(tipo_accion=datos.get('tipo_accion'))
+        
+        # Filtro por modelo
+        if datos.get('modelo'):
+            queryset = queryset.filter(modelo=datos.get('modelo'))
+        
+        # Filtro por rango de fechas
+        if datos.get('fecha_inicio'):
+            queryset = queryset.filter(fecha__gte=datos.get('fecha_inicio'))
+        if datos.get('fecha_fin'):
+            queryset = queryset.filter(fecha__lte=datos.get('fecha_fin'))
+        
+        # Filtro por ID de objeto
+        if datos.get('id_objeto'):
+            queryset = queryset.filter(id_objeto=datos.get('id_objeto'))
+        
+        # Búsqueda en descripción
+        if datos.get('descripcion'):
+            queryset = queryset.filter(descripcion__icontains=datos.get('descripcion'))
+        
+        # Contar total de resultados
+        total = queryset.count()
+        
+        # Paginación
+        pagina = int(datos.get('pagina', 1))
+        items_por_pagina = int(datos.get('items_por_pagina', 50))
+        items_por_pagina = min(items_por_pagina, 500)  # Máximo 500 items
+        
+        inicio = (pagina - 1) * items_por_pagina
+        fin = inicio + items_por_pagina
+        
+        logs = queryset[inicio:fin]
+        
+        from .serializers import AuditLogSerializer
+        serializer = AuditLogSerializer(logs, many=True)
+        
+        total_paginas = (total + items_por_pagina - 1) // items_por_pagina
+        
+        return Response({
+            'success': True,
+            'total': total,
+            'pagina': pagina,
+            'total_paginas': total_paginas,
+            'items_por_pagina': items_por_pagina,
+            'logs': serializer.data
+        }, status=status.HTTP_200_OK)
+    
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'message': f'Parámetro inválido: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def detalle_audit_log(request, log_id):
+    """
+    API endpoint para obtener el detalle de un log de auditoría específico.
+    Acceso: Solo Gerente y Admin Sistema
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+        
+        # Verificar permisos
+        if not _verificar_permisos_auditoria(usuario):
+            return Response({
+                'success': False,
+                'message': 'Acceso denegado.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        log = AuditLog.objects.get(id=log_id)
+        
+        from .serializers import AuditLogSerializer
+        serializer = AuditLogSerializer(log)
+        
+        # Verificar integridad del hash
+        hash_verificado = log.hash_integridad == log.generar_hash_integridad()
+        
+        return Response({
+            'success': True,
+            'log': serializer.data,
+            'hash_verificado': hash_verificado
+        }, status=status.HTTP_200_OK)
+    
+    except AuditLog.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Log no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def estadisticas_auditoria(request):
+    """
+    API endpoint para obtener estadísticas de auditoría.
+    Acceso: Solo Gerente y Admin Sistema
+    
+    Retorna:
+    - Total de logs
+    - Logs por tipo de acción
+    - Logs por modelo
+    - Logs por usuario (Top 10)
+    - Actividad últimas 24 horas
+    - Logs con hash inválido (potencial manipulación)
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+        
+        # Verificar permisos
+        if not _verificar_permisos_auditoria(usuario):
+            return Response({
+                'success': False,
+                'message': 'Acceso denegado.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Count
+        
+        # Total de logs
+        total_logs = AuditLog.objects.count()
+        
+        # Logs por tipo de acción
+        logs_por_tipo = AuditLog.objects.values('tipo_accion').annotate(
+            cantidad=Count('id')
+        ).order_by('-cantidad')
+        
+        # Logs por modelo
+        logs_por_modelo = AuditLog.objects.values('modelo').annotate(
+            cantidad=Count('id')
+        ).order_by('-cantidad')
+        
+        # Top 10 usuarios más activos
+        top_usuarios = AuditLog.objects.values(
+            'usuario__email',
+            'usuario__id'
+        ).annotate(
+            cantidad=Count('id')
+        ).order_by('-cantidad')[:10]
+        
+        # Actividad últimas 24 horas
+        hace_24h = timezone.now() - timedelta(hours=24)
+        logs_24h = AuditLog.objects.filter(fecha__gte=hace_24h).count()
+        
+        # Logs por hora (últimas 24 horas)
+        from django.db.models.functions import TruncHour
+        logs_por_hora = AuditLog.objects.filter(
+            fecha__gte=hace_24h
+        ).annotate(
+            hora=TruncHour('fecha')
+        ).values('hora').annotate(
+            cantidad=Count('id')
+        ).order_by('hora')
+        
+        # Verificar integridad de hashes (logs potencialmente manipulados)
+        logs_sospechosos = []
+        for log in AuditLog.objects.all()[:100]:  # Verificar últimos 100
+            if log.hash_integridad != log.generar_hash_integridad():
+                logs_sospechosos.append({
+                    'id': log.id,
+                    'usuario_email': log.usuario.email if log.usuario else 'N/A',
+                    'fecha': log.fecha.isoformat(),
+                    'tipo_accion': log.tipo_accion,
+                    'modelo': log.modelo,
+                })
+        
+        # Preparar tipos de acción con etiquetas
+        tipos_accion = dict(AuditLog._meta.get_field('tipo_accion').choices)
+        modelos = dict(AuditLog._meta.get_field('modelo').choices)
+        
+        return Response({
+            'success': True,
+            'estadisticas': {
+                'total_logs': total_logs,
+                'logs_ultimas_24h': logs_24h,
+                'logs_por_tipo_accion': [
+                    {
+                        'tipo': item['tipo_accion'],
+                        'tipo_display': tipos_accion.get(item['tipo_accion'], '?'),
+                        'cantidad': item['cantidad']
+                    }
+                    for item in logs_por_tipo
+                ],
+                'logs_por_modelo': [
+                    {
+                        'modelo': item['modelo'],
+                        'modelo_display': modelos.get(item['modelo'], '?'),
+                        'cantidad': item['cantidad']
+                    }
+                    for item in logs_por_modelo
+                ],
+                'top_usuarios_activos': [
+                    {
+                        'usuario_id': item['usuario__id'],
+                        'usuario_email': item['usuario__email'],
+                        'cantidad': item['cantidad']
+                    }
+                    for item in top_usuarios
+                ],
+                'logs_por_hora_24h': [
+                    {
+                        'hora': item['hora'].isoformat() if item['hora'] else None,
+                        'cantidad': item['cantidad']
+                    }
+                    for item in logs_por_hora
+                ],
+                'logs_potencialmente_manipulados': {
+                    'cantidad': len(logs_sospechosos),
+                    'detalles': logs_sospechosos
+                }
+            }
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def exportar_audit_logs(request):
+    """
+    API endpoint para exportar logs de auditoría en formato CSV.
+    Acceso: Solo Gerente y Admin Sistema
+    
+    Parámetros (iguales a listar_audit_logs)
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+        
+        # Verificar permisos
+        if not _verificar_permisos_auditoria(usuario):
+            return Response({
+                'success': False,
+                'message': 'Acceso denegado.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        import csv
+        from io import StringIO
+        from django.http import HttpResponse
+        
+        # Obtener parámetros
+        datos = request.query_params
+        
+        # Construir queryset con los mismos filtros
+        queryset = AuditLog.objects.all()
+        
+        if datos.get('usuario_id'):
+            queryset = queryset.filter(usuario_id=datos.get('usuario_id'))
+        if datos.get('tipo_accion'):
+            queryset = queryset.filter(tipo_accion=datos.get('tipo_accion'))
+        if datos.get('modelo'):
+            queryset = queryset.filter(modelo=datos.get('modelo'))
+        if datos.get('fecha_inicio'):
+            queryset = queryset.filter(fecha__gte=datos.get('fecha_inicio'))
+        if datos.get('fecha_fin'):
+            queryset = queryset.filter(fecha__lte=datos.get('fecha_fin'))
+        if datos.get('id_objeto'):
+            queryset = queryset.filter(id_objeto=datos.get('id_objeto'))
+        if datos.get('descripcion'):
+            queryset = queryset.filter(descripcion__icontains=datos.get('descripcion'))
+        
+        # Limitar a 10000 registros máximo para exportación
+        queryset = queryset.order_by('-fecha')[:10000]
+        
+        # Crear CSV
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Escribir encabezados
+        writer.writerow([
+            'ID',
+            'Fecha',
+            'Usuario',
+            'Tipo de Acción',
+            'Modelo',
+            'ID Objeto',
+            'Descripción',
+            'IP Address',
+            'Hash de Integridad'
+        ])
+        
+        # Escribir datos
+        count = 0
+        for log in queryset:
+            count += 1
+            try:
+                writer.writerow([
+                    log.id,
+                    log.fecha.isoformat() if log.fecha else 'N/A',
+                    log.usuario.email if log.usuario else 'N/A',
+                    log.get_tipo_accion_display(),
+                    log.modelo,
+                    log.id_objeto,
+                    log.descripcion,
+                    log.ip_address,
+                    log.hash_integridad,
+                ])
+            except Exception as row_err:
+                print(f"Error escribiendo fila para log {log.id}: {row_err}")
+                writer.writerow([log.id, 'ERROR', str(row_err), '', '', '', '', '', ''])
+        
+        # Registrar la exportación como auditoría (comentado para evitar loops infinitos)
+        # try:
+        #     AuditLog.registrar_cambio(
+        #         usuario=usuario,
+        #         tipo_accion='crear',
+        #         modelo='AuditLog',
+        #         id_objeto='export',
+        #         descripcion=f'Exportación de {count} logs de auditoría',
+        #         ip_address=ip_address,
+        #         user_agent=user_agent
+        #     )
+        # except Exception as audit_err:
+        #     print(f"Error registrando auditoría de exportación: {audit_err}")
+        
+        response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="auditoria_logs.csv"'
+        return response
+    
+    except Exception as e:
+        import traceback
+        print(f'Error en exportar_audit_logs: {str(e)}')
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'message': f'Error al exportar: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+

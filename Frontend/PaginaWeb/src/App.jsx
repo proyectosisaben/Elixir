@@ -21,6 +21,8 @@ import GestionPerfil from './pages/GestionPerfil';
 import Checkout from './pages/Checkout';
 import ConfirmacionPago from './pages/ConfirmacionPago';
 import ConfirmacionPagoDetalle from './pages/ConfirmacionPagoDetalle';
+import Auditoria from './pages/Auditoria';
+import AnalisisVentas from './pages/AnalisisVentas';
 
 // Lazy load de dashboards nuevos (cargar bajo demanda)
 const DashboardVendedor = React.lazy(() => import('./pages/DashboardVendedor'));
@@ -54,9 +56,14 @@ function App() {
             <Route path='/dashboard-cliente' element={<ProtectedRoute element={<GestionPerfil />} requiredRoles={['cliente']} />} />
             <Route path='/dashboard-vendedor' element={<ProtectedRoute element={<DashboardVendedor />} requiredRoles={['vendedor', 'gerente', 'admin_sistema']} />} />
             <Route path='/dashboard-admin' element={<ProtectedRoute element={<DashboardAdmin />} requiredRoles={['admin_sistema']} />} />
+
+            {/* Ruta temporal sin protección para testing */}
+            <Route path='/dashboard-admin-test' element={<DashboardAdmin />} />
             
             {/* Rutas protegidas - Admin */}
             <Route path='/admin/roles' element={<ProtectedRoute element={<GestionRoles />} requiredRoles={['admin_sistema']} />} />
+            <Route path='/auditoria' element={<ProtectedRoute element={<Auditoria />} requiredRoles={['gerente', 'admin_sistema']} />} />
+            <Route path='/analisis-ventas' element={<ProtectedRoute element={<AnalisisVentas />} requiredRoles={['gerente', 'admin_sistema']} />} />
             
             {/* Rutas públicas */}
             <Route path='/blog' element={<Blog />} />
@@ -70,4 +77,5 @@ function App() {
 }
 
 export default App;
+
 

@@ -46,7 +46,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  👤 Nombre: $nombre" -ForegroundColor White
     Write-Host "  🎭 Rol: gerente" -ForegroundColor White
     Write-Host ""
-    Write-Host "🌐 Ahora puedes iniciar sesión en: http://localhost:5173" -ForegroundColor Green
+    Write-Host "🌐 Ahora puedes iniciar sesión en: http://localhost:5175/login" -ForegroundColor Green
+    Write-Host "📊 Dashboard Gerente: http://localhost:5175/dashboard" -ForegroundColor Green
 } else {
     Write-Host ""
     Write-Host "❌ Error al crear el usuario" -ForegroundColor Red

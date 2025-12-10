@@ -35,11 +35,21 @@ urlpatterns = [
     
     # Endpoints de ventas y métricas
     path('ventas-totales/', views.obtener_ventas_totales, name='api_ventas_totales'),
+    path('ventas/analiticas/', views.ventas_analiticas, name='api_ventas_analiticas'),
+    path('ventas/exportar/', views.ventas_exportar, name='api_ventas_exportar'),
+    path('dashboard-admin/estadisticas/', views.dashboard_admin_estadisticas, name='api_dashboard_admin_stats'),
     
     # CRUD de catálogo - Admin
     path('admin/catalogo/productos/', views.catalogo_admin, name='api_catalogo_admin_list'),
     path('admin/catalogo/productos/<int:producto_id>/', views.detalle_catalogo_admin, name='api_catalogo_admin_detail'),
     
+    # Endpoints de Auditoría y Trazabilidad (HU 20)
+    path('auditoria/logs/', views.listar_audit_logs, name='api_audit_logs'),
+    path('auditoria/logs/<int:log_id>/', views.detalle_audit_log, name='api_audit_log_detail'),
+    path('auditoria/estadisticas/', views.estadisticas_auditoria, name='api_audit_stats'),
+    path('auditoria/exportar/', views.exportar_audit_logs, name='api_audit_export'),
+    
     # Legacy URLs (redirect to home)
     path('', views.home, name='index'),
 ]
+

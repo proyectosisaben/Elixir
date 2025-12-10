@@ -49,35 +49,72 @@ function DashboardAdmin() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      
-      // Obtener lista de clientes (que contiene todos los usuarios)
-      const clientesResponse = await fetch("http://localhost:8000/api/listar-clientes/");
-      const clientesData = clientesResponse.ok ? await clientesResponse.json() : null;
 
-      // Obtener ventas totales desde el nuevo endpoint
-      let ventasTotales = 0;
-      let totalPedidos = 0;
-      
-      if (usuario?.id) {
-        try {
-          const ventasResponse = await fetch(`http://localhost:8000/api/ventas-totales/?usuario_id=${usuario.id}`);
-          if (ventasResponse.ok) {
-            const ventasData = await ventasResponse.json();
-            if (ventasData.success && ventasData.ventas) {
-              ventasTotales = ventasData.ventas.total_ventas || 0;
-              totalPedidos = ventasData.ventas.total_pedidos || 0;
-            }
-          }
-        } catch (err) {
-          console.log('Error cargando ventas totales:', err);
+      // Obtener token para autenticación
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Token ${token}` } : {};
+
+      // Obtener estadísticas del dashboard admin (endpoint específico)
+      const statsResponse = await fetch("http://localhost:8000/api/dashboard-admin/estadisticas/", {
+        headers: headers,
+        credentials: 'include'
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success && statsData.estadisticas) {
+          const est = statsData.estadisticas;
+          setStats({
+            totalUsuarios: est.usuarios.total,
+            totalClientes: est.usuarios.por_rol.cliente,
+            totalVendedores: est.usuarios.por_rol.vendedor,
+            totalGerentes: est.usuarios.por_rol.gerente,
+            totalAdmin: est.usuarios.por_rol.admin_sistema,
+            totalPedidos: est.ventas.total_pedidos,
+            ventasTotales: est.ventas.total_ventas,
+          });
         }
+      } else {
+        console.log('Error en respuesta de estadísticas:', statsResponse.status);
+        // Fallback: obtener datos básicos
+        await cargarDatosFallback();
       }
 
-      // Obtener productos para estadísticas
-      const productosResponse = await fetch("http://localhost:8000/api/productos/");
-      const productosData = productosResponse.ok ? await productosResponse.json() : null;
+      // Obtener lista de clientes para gestión de roles
+      const clientesResponse = await fetch("http://localhost:8000/api/listar-clientes/", {
+        headers: headers,
+        credentials: 'include'
+      });
+      const clientesData = clientesResponse.ok ? await clientesResponse.json() : null;
 
-      // Procesar datos de usuarios
+      if (clientesData && clientesData.clientes) {
+        setUsuarios(clientesData.clientes);
+      }
+
+      setError(null);
+    } catch (err) {
+      console.error("Error cargando datos:", err);
+      setError("Error al cargar datos del sistema");
+      // Intentar fallback
+      await cargarDatosFallback();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Método fallback para obtener datos básicos si falla el endpoint principal
+  const cargarDatosFallback = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Token ${token}` } : {};
+
+      // Obtener lista de clientes
+      const clientesResponse = await fetch("http://localhost:8000/api/listar-clientes/", {
+        headers: headers,
+        credentials: 'include'
+      });
+      const clientesData = clientesResponse.ok ? await clientesResponse.json() : null;
+
       if (clientesData && clientesData.clientes) {
         const listaUsuarios = clientesData.clientes;
         setUsuarios(listaUsuarios);
@@ -97,6 +134,28 @@ function DashboardAdmin() {
           }
         });
 
+        // Obtener ventas si tenemos usuario
+        let ventasTotales = 0;
+        let totalPedidos = 0;
+
+        if (usuario?.id) {
+          try {
+            const ventasResponse = await fetch(`http://localhost:8000/api/ventas-totales/?usuario_id=${usuario.id}`, {
+              headers: headers,
+              credentials: 'include'
+            });
+            if (ventasResponse.ok) {
+              const ventasData = await ventasResponse.json();
+              if (ventasData.success && ventasData.ventas) {
+                ventasTotales = ventasData.ventas.total_ventas || 0;
+                totalPedidos = ventasData.ventas.total_pedidos || 0;
+              }
+            }
+          } catch (err) {
+            console.log('Error cargando ventas totales:', err);
+          }
+        }
+
         setStats({
           totalUsuarios: listaUsuarios.length,
           totalClientes: conteos.cliente,
@@ -107,13 +166,8 @@ function DashboardAdmin() {
           ventasTotales: ventasTotales,
         });
       }
-
-      setError(null);
     } catch (err) {
-      console.error("Error cargando datos:", err);
-      setError("Error al cargar datos del sistema");
-    } finally {
-      setLoading(false);
+      console.error("Error en fallback:", err);
     }
   };
 
