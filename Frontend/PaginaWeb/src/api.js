@@ -90,7 +90,7 @@ export const fetchProducto = async (productoId) => {
  */
 export const fetchProductos = async () => {
   try {
-    const response = await fetch(`${API_URL}/productos`);
+    const response = await fetch(`${API_URL}/productos/`);
     if (!response.ok) throw new Error('Error al obtener productos');
     return await response.json();
   } catch (error) {
