@@ -202,6 +202,7 @@ function DashboardVendedor() {
   };
 
   const handleAjusteStock = async () => {
+    console.log('🔒 Intentando ajustar stock - Sistema de autorizaciones v2.2');
     try {
       // Obtener datos del usuario desde localStorage
       const usuarioGuardado = localStorage.getItem('usuario');
@@ -213,6 +214,7 @@ function DashboardVendedor() {
         return;
       }
 
+      // Intentar actualizar stock directamente primero (solo funcionará para gerentes/admin)
       const response = await fetch(`http://localhost:8000/api/productos/${selectedProducto.id}/actualizar-stock/`, {
         method: 'PATCH',
         headers: {
@@ -227,12 +229,65 @@ function DashboardVendedor() {
         alert('✅ Stock actualizado correctamente');
         setShowAjusteStock(false);
         cargarDatos();
+      } else if (data.requiere_autorizacion) {
+        // Si requiere autorización, crear solicitud de autorización automáticamente
+        const confirmacion = window.confirm(
+          'Como vendedor, no puedes modificar stock directamente. ¿Quieres crear una solicitud de autorización para que un gerente o administrador apruebe este cambio?'
+        );
+
+        if (confirmacion) {
+          await crearSolicitudAutorizacion();
+        }
       } else {
         alert('❌ Error: ' + (data.message || 'No se pudo actualizar el stock'));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al actualizar stock');
+      alert('❌ Error al procesar la solicitud');
+    }
+  };
+
+  const crearSolicitudAutorizacion = async () => {
+    try {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      const usuarioData = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+      const usuarioId = usuarioData?.id;
+
+      if (!usuarioId) {
+        alert('❌ Error: No se pudo obtener el ID del usuario');
+        return;
+      }
+
+      const solicitudData = {
+        tipo_solicitud: 'cambio_stock',
+        modelo_afectado: 'Producto',
+        id_objeto_afectado: selectedProducto.id,
+        datos_anteriores: { stock: selectedProducto.stock },
+        datos_nuevos: { stock: nuevoStock },
+        motivo: `Solicitud de cambio de stock para ${selectedProducto.nombre} de ${selectedProducto.stock} a ${nuevoStock} unidades.`,
+        prioridad: 'media',
+        usuario_id: usuarioId
+      };
+
+      const response = await fetch('http://localhost:8000/api/autorizaciones/crear/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(solicitudData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('✅ Solicitud de autorización creada exitosamente. Un gerente o administrador la revisará.');
+        setShowAjusteStock(false);
+      } else {
+        alert('❌ Error al crear solicitud: ' + (data.message || 'Error desconocido'));
+      }
+    } catch (error) {
+      console.error('Error creando solicitud:', error);
+      alert('❌ Error al crear la solicitud de autorización');
     }
   };
 
@@ -387,7 +442,7 @@ function DashboardVendedor() {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="btn-editar"
                           onClick={() => {
                             setSelectedProducto(producto);
@@ -395,7 +450,7 @@ function DashboardVendedor() {
                             setShowAjusteStock(true);
                           }}
                         >
-                          <FaEdit /> Ajustar Stock
+                          <FaEdit /> Solicitar Cambio Stock
                         </button>
                       </td>
                     </tr>
@@ -557,7 +612,7 @@ function DashboardVendedor() {
           <div className="modal-overlay">
             <div className="modal-container">
               <div className="modal-header">
-                <h3>Ajustar Stock - {selectedProducto.nombre}</h3>
+                <h3>Solicitar Cambio de Stock - {selectedProducto.nombre}</h3>
                 <button 
                   className="btn-close"
                   onClick={() => {
@@ -580,11 +635,8 @@ function DashboardVendedor() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn-confirmar" onClick={() => {
-                  setShowAjusteStock(false);
-                  cargarDatos();
-                }}>
-                  <FaCheck /> Confirmar
+                <button className="btn-confirmar" onClick={handleAjusteStock}>
+                  <FaCheck /> Crear Solicitud
                 </button>
                 <button 
                   className="btn-cancelar"

@@ -48,7 +48,12 @@ urlpatterns = [
     path('auditoria/logs/<int:log_id>/', views.detalle_audit_log, name='api_audit_log_detail'),
     path('auditoria/estadisticas/', views.estadisticas_auditoria, name='api_audit_stats'),
     path('auditoria/exportar/', views.exportar_audit_logs, name='api_audit_export'),
-    
+
+    # Endpoints de Autorizaciones de Inventario (HU 50)
+    path('autorizaciones/solicitudes/', views.listar_solicitudes_autorizacion, name='api_listar_autorizaciones'),
+    path('autorizaciones/crear/', views.crear_solicitud_autorizacion, name='api_crear_autorizacion'),
+    path('autorizaciones/<int:solicitud_id>/gestionar/', views.gestionar_solicitud_autorizacion, name='api_gestionar_autorizacion'),
+
     # Legacy URLs (redirect to home)
     path('', views.home, name='index'),
 ]

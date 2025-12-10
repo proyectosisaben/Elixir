@@ -1591,12 +1591,14 @@ def actualizar_stock_producto(request, producto_id):
                 'message': 'usuario_id es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Verificar permisos
+        # Verificar permisos - Solo gerentes y admin pueden actualizar stock directamente
         cliente = Cliente.objects.get(user_id=usuario_id)
-        if cliente.rol not in ['vendedor', 'gerente', 'admin_sistema']:
+        if cliente.rol not in ['gerente', 'admin_sistema']:
+            # Los vendedores deben crear solicitudes de autorización
             return Response({
                 'success': False,
-                'message': 'No tienes permisos para actualizar productos'
+                'message': 'Los vendedores no pueden modificar stock directamente. Crea una solicitud de autorización.',
+                'requiere_autorizacion': True
             }, status=status.HTTP_403_FORBIDDEN)
         
         producto = Producto.objects.get(id=producto_id)
@@ -2302,5 +2304,185 @@ def exportar_audit_logs(request):
         return Response({
             'success': False,
             'message': f'Error al exportar: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+# =========================
+# AUTORIZACIONES DE INVENTARIO (HU 50)
+# =========================
+
+@api_view(['GET'])
+def listar_solicitudes_autorizacion(request):
+    """
+    API endpoint para listar solicitudes de autorización con filtros
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+
+        # Filtros
+        estado = request.GET.get('estado', '')
+        tipo_solicitud = request.GET.get('tipo_solicitud', '')
+        prioridad = request.GET.get('prioridad', '')
+
+        queryset = SolicitudAutorizacion.objects.all()
+
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        if tipo_solicitud:
+            queryset = queryset.filter(tipo_solicitud=tipo_solicitud)
+        if prioridad:
+            queryset = queryset.filter(prioridad=prioridad)
+
+        # Si el usuario es vendedor, solo mostrar sus propias solicitudes
+        if usuario and hasattr(usuario, 'cliente'):
+            if usuario.cliente.rol == 'vendedor':
+                queryset = queryset.filter(solicitante=usuario)
+
+        solicitudes = queryset.order_by('-fecha_solicitud')
+
+        solicitudes_data = []
+        for solicitud in solicitudes:
+            solicitudes_data.append({
+                'id': solicitud.id,
+                'fecha_solicitud': solicitud.fecha_solicitud.isoformat(),
+                'fecha_respuesta': solicitud.fecha_respuesta.isoformat() if solicitud.fecha_respuesta else None,
+                'estado': solicitud.estado,
+                'tipo_solicitud': solicitud.tipo_solicitud,
+                'modelo_afectado': solicitud.modelo_afectado,
+                'id_objeto_afectado': solicitud.id_objeto_afectado,
+                'motivo': solicitud.motivo,
+                'comentario_respuesta': solicitud.comentario_respuesta,
+                'prioridad': solicitud.prioridad,
+                'solicitante': {
+                    'id': solicitud.solicitante.id,
+                    'username': solicitud.solicitante.username,
+                    'email': solicitud.solicitante.email
+                },
+                'aprobador': {
+                    'id': solicitud.aprobador.id,
+                    'username': solicitud.aprobador.username,
+                    'email': solicitud.aprobador.email
+                } if solicitud.aprobador else None
+            })
+
+        return Response({
+            'success': True,
+            'solicitudes': solicitudes_data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'message': f'Error al listar solicitudes: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def crear_solicitud_autorizacion(request):
+    """
+    API endpoint para crear una nueva solicitud de autorización
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+
+        if not usuario or not usuario.is_authenticated:
+            return Response({'success': False, 'message': 'No autenticado'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            cliente = Cliente.objects.get(user=usuario)
+            if cliente.rol not in ['vendedor', 'gerente', 'admin_sistema']:
+                return Response({'success': False, 'message': 'Solo vendedores, gerentes y administradores pueden crear solicitudes'}, status=status.HTTP_403_FORBIDDEN)
+        except Cliente.DoesNotExist:
+            return Response({'success': False, 'message': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Crear la solicitud
+        solicitud = SolicitudAutorizacion.crear_solicitud(
+            solicitante=usuario,
+            tipo_solicitud=request.data.get('tipo_solicitud'),
+            modelo_afectado=request.data.get('modelo_afectado'),
+            id_objeto_afectado=request.data.get('id_objeto_afectado'),
+            datos_anteriores=request.data.get('datos_anteriores', {}),
+            datos_nuevos=request.data.get('datos_nuevos', {}),
+            motivo=request.data.get('motivo'),
+            prioridad=request.data.get('prioridad', 'media'),
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+
+        return Response({
+            'success': True,
+            'message': 'Solicitud creada exitosamente',
+            'solicitud': {
+                'id': solicitud.id,
+                'estado': solicitud.estado,
+                'fecha_solicitud': solicitud.fecha_solicitud.isoformat()
+            }
+        }, status=status.HTTP_201_CREATED)
+
+    except ValueError as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'message': f'Error al crear solicitud: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def gestionar_solicitud_autorizacion(request, solicitud_id):
+    """
+    API endpoint para aprobar o rechazar una solicitud de autorización
+    """
+    try:
+        usuario, ip_address, user_agent = _obtener_info_usuario(request)
+
+        if not usuario or not usuario.is_authenticated:
+            return Response({'success': False, 'message': 'No autenticado'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            cliente = Cliente.objects.get(user=usuario)
+            if cliente.rol not in ['gerente', 'admin_sistema']:
+                return Response({'success': False, 'message': 'Solo gerentes y administradores pueden gestionar solicitudes'}, status=status.HTTP_403_FORBIDDEN)
+        except Cliente.DoesNotExist:
+            return Response({'success': False, 'message': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            solicitud = SolicitudAutorizacion.objects.get(id=solicitud_id)
+        except SolicitudAutorizacion.DoesNotExist:
+            return Response({'success': False, 'message': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+        accion = request.data.get('accion')
+        comentario = request.data.get('comentario', '')
+
+        if accion == 'aprobar':
+            solicitud.aprobar(usuario, comentario)
+            mensaje = 'Solicitud aprobada exitosamente'
+        elif accion == 'rechazar':
+            solicitud.rechazar(usuario, comentario)
+            mensaje = 'Solicitud rechazada exitosamente'
+        else:
+            return Response({'success': False, 'message': 'Acción no válida'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'success': True,
+            'message': mensaje,
+            'solicitud': {
+                'id': solicitud.id,
+                'estado': solicitud.estado,
+                'fecha_respuesta': solicitud.fecha_respuesta.isoformat() if solicitud.fecha_respuesta else None,
+                'comentario_respuesta': solicitud.comentario_respuesta
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'message': f'Error al gestionar solicitud: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
 
