@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRol } from "../contexts/RolContext";
 import "../styles/globals.css";
 // Cache busting - Versión 2.1 con campos de costo y stock_minimo completos
@@ -6,6 +7,7 @@ import { FaBox, FaChartBar, FaDollarSign, FaShoppingCart, FaUserTie, FaArrowUp, 
 
 function DashboardVendedor() {
   const { usuario } = useRol();
+  const navigate = useNavigate();
   const [metricas, setMetricas] = useState({
     productosActivos: 0,
     ventasHoy: 0,
@@ -354,6 +356,15 @@ function DashboardVendedor() {
               <h1>Panel de Vendedor - Botillería Elixir</h1>
               <p>Gestiona tu inventario de bebidas premium y monitorea tus ventas</p>
             </div>
+          </div>
+          <div className="vendedor-actions">
+            <button
+              className="btn-autorizaciones"
+              onClick={() => navigate('/autorizaciones')}
+              title="Solicitar autorizaciones para cambios en inventario"
+            >
+              🔐 Autorizaciones
+            </button>
           </div>
         </div>
       </div>
@@ -704,4 +715,58 @@ function DashboardVendedor() {
 }
 
 export default DashboardVendedor;
+
+// Estilos para el botón de autorizaciones
+const autorizacionesStyles = `
+.vendedor-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-autorizaciones {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-autorizaciones:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.btn-autorizaciones:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 768px) {
+  .vendedor-actions {
+    margin-top: 15px;
+    justify-content: center;
+  }
+
+  .btn-autorizaciones {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+`;
+
+// Inyectar estilos
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = autorizacionesStyles;
+document.head.appendChild(styleSheet);
 
