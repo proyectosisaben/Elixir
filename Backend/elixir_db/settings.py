@@ -99,15 +99,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Email para pruebas y confirmación de usuarios
 # Para desarrollo (los emails se muestran en la consola):
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Configuración de Email
+# En desarrollo usa console, en producción usa SMTP si está configurado
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-# Para producción con SMTP real (Gmail):
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''  # Tu email de Gmail
-EMAIL_HOST_PASSWORD = ''  # Contraseña de aplicación de Gmail (NO tu contraseña normal)
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    # Producción con SMTP real (Gmail)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+else:
+    # Desarrollo - solo imprime en consola
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST = ''
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
 
 DEFAULT_FROM_EMAIL = 'Elixir Botillería <no-reply@elixir.com>'
 FRONTEND_URL = 'http://localhost:3000'  # URL del frontend React
@@ -179,6 +187,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# En producción, permitir todos los orígenes de Render
+if not DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
