@@ -38,7 +38,7 @@ function BuscadorAvanzado({
 
     setCargandoSugerencias(true);
     try {
-      const response = await fetch(`/api/productos/sugerencias/?q=${encodeURIComponent(query)}`);
+      const response = await fetch("${window.API_BASE_URL}/api/productos/sugerencias/?q=${encodeURIComponent(query)}`);
       const data = await response.json();
       setSugerencias(data.sugerencias || []);
       setMostrarSugerencias(true);

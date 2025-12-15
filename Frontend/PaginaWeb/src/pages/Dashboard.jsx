@@ -80,7 +80,7 @@ function Dashboard() {
 
   const cargarVendedores = async () => {
     try {
-      const response = await fetch(`/api/listar-clientes/?user_id=${usuario?.id}`);
+      const response = await fetch("${window.API_BASE_URL}/api/listar-clientes/?user_id=${usuario?.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -103,7 +103,7 @@ function Dashboard() {
         if (value) queryParams.append(key, value);
       });
 
-      const response = await fetch(`/api/ventas/filtradas-gerente/?${queryParams.toString()}`);
+      const response = await fetch("${window.API_BASE_URL}/api/ventas/filtradas-gerente/?${queryParams.toString()}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -146,7 +146,7 @@ function Dashboard() {
     }
 
     try {
-      const response = await fetch(`/api/clientes/buscar/?user_id=${usuario?.id}&q=${encodeURIComponent(busquedaClientes)}`);
+      const response = await fetch("${window.API_BASE_URL}/api/clientes/buscar/?user_id=${usuario?.id}&q=${encodeURIComponent(busquedaClientes)}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -176,7 +176,7 @@ function Dashboard() {
   const cargarPedidos = async () => {
     setCargandoPedidos(true);
     try {
-      const response = await fetch(`/api/pedidos/gestion/?usuario_id=${usuario?.id}&estado=${filtroEstadoPedido}`);
+      const response = await fetch("${window.API_BASE_URL}/api/pedidos/gestion/?usuario_id=${usuario?.id}&estado=${filtroEstadoPedido}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -198,7 +198,7 @@ function Dashboard() {
       // Buscar datos del pedido para el email
       const pedidoActual = pedidos.find(p => p.id === pedidoId);
       
-      const response = await fetch('/api/cambiar-estado-pedido/', {
+      const response = await fetch("${window.API_BASE_URL}/api/cambiar-estado-pedido/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -246,8 +246,8 @@ function Dashboard() {
       setLoading(true);
 
       // Obtener datos del endpoint dashboard-admin
-      const dashboardResponse = await fetch(`/api/dashboard-admin/?usuario_id=${usuario?.id || 1}`);
-      const productosResponse = await fetch("/api/productos/");
+      const dashboardResponse = await fetch("${window.API_BASE_URL}/api/dashboard-admin/?usuario_id=${usuario?.id || 1}`);
+      const productosResponse = await fetch("${window.API_BASE_URL}/api/productos/");
 
       let dashboardData = null;
       if (dashboardResponse.ok) {

@@ -121,7 +121,7 @@ export default function Checkout() {
 
   const cargarMetodosEnvio = async () => {
     try {
-      const response = await fetch('/api/envio/metodos/');
+      const response = await fetch("${window.API_BASE_URL}/api/envio/metodos/');
       const data = await response.json();
       if (data.success) {
         setMetodosEnvio(data.metodos || []);
@@ -133,7 +133,7 @@ export default function Checkout() {
 
   const cargarRegionesComunas = async () => {
     try {
-      const response = await fetch('/api/direcciones/regiones-comunas/');
+      const response = await fetch("${window.API_BASE_URL}/api/direcciones/regiones-comunas/');
       if (!response.ok) {
         console.error('Error en respuesta de regiones:', response.status);
         return;
@@ -158,7 +158,7 @@ export default function Checkout() {
     setCalculandoEnvio(true);
     try {
       const subtotal = calcularSubtotal();
-      const response = await fetch('/api/envio/calcular-costo/', {
+      const response = await fetch("${window.API_BASE_URL}/api/envio/calcular-costo/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -223,7 +223,7 @@ export default function Checkout() {
       
       console.log('Enviando dirección:', bodyData);
       
-      const response = await fetch('/api/direcciones/', {
+      const response = await fetch("${window.API_BASE_URL}/api/direcciones/', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(bodyData),
@@ -337,7 +337,7 @@ export default function Checkout() {
 
     try {
       const subtotal = calcularSubtotal();
-      const response = await fetch('/api/cupones/validar/', {
+      const response = await fetch("${window.API_BASE_URL}/api/cupones/validar/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -401,7 +401,7 @@ export default function Checkout() {
         precio: item.precio
       }));
 
-      const response = await fetch('/api/crear-pedido/', {
+      const response = await fetch("${window.API_BASE_URL}/api/crear-pedido/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

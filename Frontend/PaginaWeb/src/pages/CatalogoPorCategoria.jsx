@@ -59,7 +59,7 @@ function CatalogoPorCategoria() {
     const obtenerProductos = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/catalogo/');
+        const response = await fetch(`${window.API_BASE_URL}/api/catalogo/`);
         const data = await response.json();
         
         setProductos(data.productos || []);
@@ -95,7 +95,7 @@ function CatalogoPorCategoria() {
 
     try {
       const queryParams = construirParametrosQueryFiltros(filtros);
-      const url = `/api/catalogo/?${queryParams}`;
+      const url = `${window.API_BASE_URL}/api/catalogo/?${queryParams}`;
       
       const response = await fetch(url);
       const data = await response.json();

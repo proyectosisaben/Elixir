@@ -52,7 +52,7 @@ function AutorizacionesGerente() {
         if (value) queryParams.append(key, value);
       });
 
-      const response = await fetch(`/api/autorizaciones/solicitudes/?${queryParams.toString()}`);
+      const response = await fetch("${window.API_BASE_URL}/api/autorizaciones/solicitudes/?${queryParams.toString()}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -88,7 +88,7 @@ function AutorizacionesGerente() {
 
       // Primero probar la conexión con una solicitud de test
       console.log('🔍 FRONTEND - Probando conexión con test...');
-      const testResponse = await fetch(`/api/autorizaciones/${solicitudId}/test/`, {
+      const testResponse = await fetch("${window.API_BASE_URL}/api/autorizaciones/${solicitudId}/test/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ function AutorizacionesGerente() {
 
       console.log('📤 FRONTEND - Enviando datos reales:', JSON.stringify(requestData, null, 2));
 
-      const response = await fetch(`/api/autorizaciones/${solicitudId}/gestionar/`, {
+      const response = await fetch("${window.API_BASE_URL}/api/autorizaciones/${solicitudId}/gestionar/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

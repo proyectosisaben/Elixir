@@ -27,7 +27,7 @@ function GestionRoles() {
   const cargarClientes = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/listar-clientes/?usuario_id=${usuario?.id || 1}`);
+      const response = await fetch("${window.API_BASE_URL}/api/listar-clientes/?usuario_id=${usuario?.id || 1}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al cargar clientes");
@@ -55,7 +55,7 @@ function GestionRoles() {
 
     setActualizando(true);
     try {
-      const response = await fetch("/api/cambiar-rol/", {
+      const response = await fetch("${window.API_BASE_URL}/api/cambiar-rol/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
