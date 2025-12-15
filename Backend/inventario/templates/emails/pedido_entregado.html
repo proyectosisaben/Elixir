@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Entregado - Elixir</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .info-box {
+            background: #f0fdf4;
+            border-left: 4px solid #48bb78;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box .label {
+            font-weight: 600;
+            color: #22863a;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .info-box .value {
+            font-size: 18px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin: 10px 5px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .secondary-button {
+            background: #4299e1;
+        }
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ ¡Tu Pedido Ha Sido Entregado!</h1>
+        </div>
+
+        <div class="content">
+            <p>¡Hola <strong>{{ cliente_nombre }}</strong>!</p>
+            
+            <p>¡Felicidades! Tu pedido ha sido entregado exitosamente. Esperamos que disfrutes de tu compra en Elixir. 🎉</p>
+
+            <div class="info-box">
+                <div class="label">Número de Pedido</div>
+                <div class="value">{{ numero_pedido }}</div>
+            </div>
+
+            <div class="info-box">
+                <div class="label">Código de Seguimiento</div>
+                <div class="value">{{ codigo_seguimiento }}</div>
+            </div>
+
+            <div class="info-box">
+                <div class="label">Fecha de Entrega</div>
+                <div class="value">{{ fecha_entrega }}</div>
+            </div>
+
+            <h3 style="color: #2d3748; margin-top: 30px;">¿Qué sigue?</h3>
+            <ul style="color: #4a5568;">
+                <li>Si tienes algún problema con tu pedido, contacta con nosotros inmediatamente</li>
+                <li>Déjanos saber qué te pareció tu compra con una reseña</li>
+                <li>Descubre nuestros otros productos visitando el catálogo</li>
+            </ul>
+
+            <center>
+                <a href="{{ url_dashboard }}" class="cta-button">Ver mis Pedidos</a>
+                <a href="{{ url_dashboard }}" class="cta-button secondary-button">Explorar Catálogo</a>
+            </center>
+
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                <strong>Agradecemos tu confianza</strong> en Elixir. Cualquier duda o problema, no dudes en escribirnos.
+            </p>
+
+            <p style="color: #666; font-size: 14px;">
+                ¡Esperamos verte pronto de nuevo! 💙
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Elixir - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

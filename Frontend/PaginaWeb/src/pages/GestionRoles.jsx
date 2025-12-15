@@ -27,11 +27,14 @@ function GestionRoles() {
   const cargarClientes = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8000/api/listar-clientes/");
-      if (!response.ok) throw new Error("Error al cargar clientes");
+      const response = await fetch(`/api/listar-clientes/?usuario_id=${usuario?.id || 1}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al cargar clientes");
+      }
       const data = await response.json();
       setClientes(data.clientes || []);
-      
+
       // Inicializar rol seleccionado para cada cliente
       const rolesInit = {};
       data.clientes.forEach(c => {
@@ -41,7 +44,7 @@ function GestionRoles() {
       setError(null);
     } catch (err) {
       console.error("Error:", err);
-      setError("No se pudieron cargar los clientes");
+      setError(err.message || "No se pudieron cargar los clientes");
     } finally {
       setLoading(false);
     }
@@ -52,10 +55,11 @@ function GestionRoles() {
 
     setActualizando(true);
     try {
-      const response = await fetch("http://localhost:8000/api/cambiar-rol/", {
+      const response = await fetch("/api/cambiar-rol/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          admin_usuario_id: usuario?.id || 1,
           usuario_id: usuarioId,
           rol: nuevoRol
         })

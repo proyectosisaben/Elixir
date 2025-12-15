@@ -1,0 +1,561 @@
+/**
+ * Estilos para el Buscador Avanzado
+ */
+
+.buscador-avanzado {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ===================== */
+/* BÚSQUEDA CON AUTOCOMPLETADO */
+/* ===================== */
+
+.busqueda-container {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input-busqueda-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-busqueda {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.input-busqueda:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.input-busqueda::placeholder {
+  color: #999;
+}
+
+.icono-busqueda {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  color: #999;
+  pointer-events: none;
+}
+
+/* Dropdown de sugerencias */
+.sugerencias-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.sugerencia-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sugerencia-item:last-child {
+  border-bottom: none;
+}
+
+.sugerencia-item:hover:not(.loading) {
+  background-color: #f8f9fa;
+}
+
+.sugerencia-item.loading {
+  text-align: center;
+  color: #999;
+  padding: 16px;
+}
+
+.sugerencia-nombre {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sugerencia-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #999;
+  gap: 10px;
+}
+
+.sugerencia-sku {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.sugerencia-precio {
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* Botón de filtros mobile */
+.btn-filtros-mobile {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-filtros-mobile:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.btn-filtros-mobile svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ===================== */
+/* CHIPS DE FILTROS */
+/* ===================== */
+
+.chips-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.chip-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #007bff;
+  border-radius: 20px;
+  padding: 6px 12px 6px 14px;
+  font-size: 13px;
+  color: #007bff;
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chip-label {
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-remover {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.chip-remover:hover {
+  color: #0056b3;
+}
+
+.btn-limpiar-filtros {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.btn-limpiar-filtros:hover {
+  color: #555;
+}
+
+/* ===================== */
+/* PANEL DE FILTROS */
+/* ===================== */
+
+.panel-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.filtro-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filtro-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Checkboxes */
+.filtro-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.checkbox-item:hover {
+  color: #007bff;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #007bff;
+  border-radius: 3px;
+}
+
+.checkbox-label {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Select de proveedor */
+.select-filtro {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-filtro:hover {
+  border-color: #d0d0d0;
+}
+
+.select-filtro:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* Rango de precio */
+.rango-precio-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-precio {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.input-precio:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.separador-precio {
+  color: #999;
+  font-weight: 500;
+}
+
+.precio-display {
+  font-size: 13px;
+  color: #999;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Radio buttons de disponibilidad */
+.filtro-disponibilidad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.radio-item:hover {
+  color: #007bff;
+}
+
+.radio-item input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+.radio-item span {
+  font-size: 14px;
+  color: #666;
+}
+
+/* ===================== */
+/* RESPONSIVE */
+/* ===================== */
+
+@media (max-width: 768px) {
+  .buscador-avanzado {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .busqueda-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-filtros-mobile {
+    display: flex;
+    order: -1;
+  }
+
+  .input-busqueda-wrapper {
+    order: 0;
+  }
+
+  .panel-filtros {
+    display: none;
+    grid-template-columns: 1fr;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    padding: 20px;
+    z-index: 999;
+    overflow-y: auto;
+    gap: 24px;
+  }
+
+  .panel-filtros.visible {
+    display: grid;
+  }
+
+  .chips-filtros {
+    margin-bottom: 15px;
+  }
+
+  .chip-filtro {
+    font-size: 12px;
+  }
+
+  .chip-label {
+    max-width: 150px;
+  }
+
+  .filtro-titulo {
+    font-size: 13px;
+  }
+
+  .rango-precio-inputs {
+    flex-direction: column;
+  }
+
+  .input-precio {
+    width: 100%;
+  }
+
+  .separador-precio {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .buscador-avanzado {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .input-busqueda {
+    padding: 10px 12px 10px 36px;
+    font-size: 14px;
+  }
+
+  .icono-busqueda {
+    width: 16px;
+    height: 16px;
+  }
+
+  .chip-filtro {
+    font-size: 11px;
+    padding: 5px 10px 5px 12px;
+  }
+
+  .chip-label {
+    max-width: 120px;
+  }
+
+  .panel-filtros {
+    padding: 15px;
+  }
+
+  .rango-precio-inputs {
+    gap: 10px;
+  }
+
+  .input-precio {
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+/* ===================== */
+/* ANIMACIONES Y TRANSICIONES */
+/* ===================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .chip-filtro {
+    animation: none;
+  }
+
+  .input-busqueda,
+  .select-filtro,
+  .input-precio,
+  .checkbox-item,
+  .radio-item {
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .buscador-avanzado {
+    background: #1e1e1e;
+  }
+
+  .input-busqueda,
+  .select-filtro,
+  .sugerencias-dropdown {
+    background: #2d2d2d;
+    color: #fff;
+    border-color: #404040;
+  }
+
+  .input-busqueda::placeholder {
+    color: #999;
+  }
+
+  .sugerencia-item {
+    border-bottom-color: #404040;
+  }
+
+  .sugerencia-item:hover:not(.loading) {
+    background-color: #3d3d3d;
+  }
+
+  .sugerencia-nombre {
+    color: #fff;
+  }
+
+  .sugerencia-info {
+    color: #999;
+  }
+
+  .sugerencia-sku {
+    background: #404040;
+  }
+
+  .filtro-titulo {
+    color: #fff;
+  }
+
+  .checkbox-label,
+  .radio-item span {
+    color: #ccc;
+  }
+
+  .precio-display {
+    color: #999;
+  }
+
+  .chip-filtro {
+    background: #2d2d2d;
+  }
+}

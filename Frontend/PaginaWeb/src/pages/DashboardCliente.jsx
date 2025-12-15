@@ -19,7 +19,7 @@ function DashboardCliente() {
 
   const cargarPedidos = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/mis-pedidos/");
+      const response = await fetch(`/api/mis-pedidos/?usuario_id=${usuario?.id || 1}`);
       if (response.ok) {
         const data = await response.json();
         setPedidos(data.pedidos || []);

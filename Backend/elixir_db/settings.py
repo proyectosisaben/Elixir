@@ -1,15 +1,21 @@
 import os
 from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 # Base directory del proyecto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Seguridad
-SECRET_KEY = 'django-insecure-elixir-botilleria-2025-super-secreto'
+# Seguridad - usar variable de entorno en producción
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-elixir-botilleria-2025-super-secreto')
 
-DEBUG = True
+# DEBUG = False en producción
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app').split(',')
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -27,6 +33,7 @@ INSTALLED_APPS = [
 # Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise para archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,16 +69,28 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'elixir_db.wsgi.application'    # Cambiado de 'todocarro.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'elixir_db',
-        'USER': 'root',
-        'PASSWORD': 'admin',
-        'HOST': 'localhost',
-        'PORT': '3306',
+# Configuración de base de datos
+# Usa DATABASE_URL de Railway si está disponible
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'railway'),
+            'USER': os.environ.get('DB_USER', 'root'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'UseFLrFLwDmRZZRiKDqfTGEvbfkIVxUA'),
+            'HOST': os.environ.get('DB_HOST', 'caboose.proxy.rlwy.net'),
+            'PORT': os.environ.get('DB_PORT', '48510'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        }
+    }
 # Validadores de contraseña
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -81,8 +100,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Email para pruebas y confirmación de usuarios
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@elixir.com'
+# Para desarrollo (los emails se muestran en la consola):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para producción con SMTP real (Gmail):
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''  # Tu email de Gmail
+EMAIL_HOST_PASSWORD = ''  # Contraseña de aplicación de Gmail (NO tu contraseña normal)
+
+DEFAULT_FROM_EMAIL = 'Elixir Botillería <no-reply@elixir.com>'
+FRONTEND_URL = 'http://localhost:3000'  # URL del frontend React
 
 # Localización y zona horaria de Chile
 LANGUAGE_CODE = 'es-cl'
@@ -93,7 +123,16 @@ USE_TZ = True
 # Archivos estáticos (CSS, JS)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Solo agregar STATICFILES_DIRS si el directorio existe
+_static_dir = os.path.join(BASE_DIR, 'static')
+if os.path.exists(_static_dir):
+    STATICFILES_DIRS = [_static_dir]
+else:
+    STATICFILES_DIRS = []
+
+# Whitenoise para servir archivos estáticos en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Archivos media (subida de imágenes, documentos)
 MEDIA_URL = '/media/'
@@ -119,3 +158,35 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5177",
     "http://127.0.0.1:5178",
 ]
+
+# Agregar URLs de Railway desde variable de entorno
+FRONTEND_URL_ENV = os.environ.get('FRONTEND_URL')
+if FRONTEND_URL_ENV:
+    CORS_ALLOWED_ORIGINS.append(FRONTEND_URL_ENV)
+
+# Permitir todos los orígenes de Railway en producción
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.railway\.app$",
+    r"^https://.*\.up\.railway\.app$",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Configuración de seguridad para producción
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = False  # Railway maneja SSL
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.railway.app').split(',')

@@ -63,7 +63,7 @@ function DashboardVendedor() {
         setProductos(listaProductos);
 
         // Calcular métricas basadas en productos reales
-        const productosActivos = listaProductos.filter(p => p.activo !== false).length;
+        const productosActivos = listaProductos.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0);
         const stockBajo = listaProductos.filter(p => p.stock < p.stock_minimo).length;
         const ingresoMes = listaProductos.reduce((sum, p) => {
           const ganancia = (p.precio - p.costo) * (p.stock > 0 ? Math.min(p.stock, 10) : 0);
@@ -374,11 +374,11 @@ function DashboardVendedor() {
         <div className="metricas-grid">
           <div className="metrica-card activos">
             <div className="metrica-header">
-              <h3>Productos Activos</h3>
+              <h3>Inventario Total</h3>
               <FaBox className="metrica-icon" />
             </div>
             <p className="metrica-valor">{metricas.productosActivos}</p>
-            <span className="metrica-label">Bebidas en catálogo</span>
+            <span className="metrica-label">Unidades en stock</span>
           </div>
 
           <div className="metrica-card vendidos">

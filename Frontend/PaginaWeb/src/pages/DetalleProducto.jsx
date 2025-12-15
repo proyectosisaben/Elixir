@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import ProductosRecomendados from "../components/ProductosRecomendados";
 import "../styles/globals.css";
 
 function DetalleProducto() {
@@ -331,6 +332,15 @@ useEffect(() => {
             </small>
           </div>
         </div>
+      </div>
+
+      {/* Productos Relacionados */}
+      <div style={{ marginTop: '60px' }}>
+        <ProductosRecomendados 
+          titulo="🛍️ Productos Relacionados" 
+          limite={6}
+          productoId={id}
+        />
       </div>
     </div>
   );

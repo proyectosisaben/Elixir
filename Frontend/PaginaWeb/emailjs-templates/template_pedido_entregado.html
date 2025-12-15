@@ -1,0 +1,136 @@
+<!--
+  TEMPLATE: Pedido Entregado
+  SERVICE: [Tu Service ID]
+  TEMPLATE ID: template_pedido_entregado
+  
+  Variables que debes enviar desde el código:
+  - to_email: email del cliente
+  - to_name: nombre del cliente
+  - numero_pedido: número del pedido
+  - fecha_entrega: fecha de entrega
+-->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa;">
+  
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    
+    <!-- HEADER CON CELEBRACIÓN -->
+    <tr>
+      <td style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); padding: 40px; text-align: center;">
+        <div style="font-size: 50px; margin-bottom: 15px;">🎉</div>
+        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 700;">
+          ¡Pedido Entregado!
+        </h1>
+        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 15px;">
+          Tu pedido ha llegado a destino
+        </p>
+      </td>
+    </tr>
+    
+    <!-- SALUDO -->
+    <tr>
+      <td style="padding: 35px 40px 20px 40px; text-align: center;">
+        <p style="color: #212529; font-size: 18px; line-height: 1.6; margin: 0;">
+          ¡Hola <strong>{{to_name}}</strong>! 👋
+        </p>
+        <p style="color: #6c757d; font-size: 16px; line-height: 1.6; margin: 15px 0 0 0;">
+          Nos alegra informarte que tu pedido ha sido entregado exitosamente.
+        </p>
+      </td>
+    </tr>
+    
+    <!-- INFORMACIÓN DEL PEDIDO -->
+    <tr>
+      <td style="padding: 0 40px 25px 40px;">
+        <div style="background: linear-gradient(135deg, #d1e7dd 0%, #a3cfbb 100%); border-radius: 16px; padding: 30px; text-align: center;">
+          <div style="display: inline-block; background-color: rgba(255,255,255,0.7); padding: 8px 20px; border-radius: 20px; margin-bottom: 15px;">
+            <span style="color: #0f5132; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">✓ Entregado</span>
+          </div>
+          <p style="color: #0f5132; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px 0;">
+            Pedido
+          </p>
+          <p style="color: #0f5132; font-size: 26px; font-weight: 700; margin: 0;">
+            {{numero_pedido}}
+          </p>
+          <p style="color: #0f5132; font-size: 14px; margin: 15px 0 0 0;">
+            📅 Entregado el {{fecha_entrega}}
+          </p>
+        </div>
+      </td>
+    </tr>
+    
+    <!-- AGRADECIMIENTO -->
+    <tr>
+      <td style="padding: 0 40px 30px 40px; text-align: center;">
+        <div style="background-color: #f8f9fa; border-radius: 16px; padding: 30px;">
+          <div style="font-size: 40px; margin-bottom: 15px;">💙</div>
+          <h3 style="color: #212529; font-size: 20px; margin: 0 0 10px 0; font-weight: 600;">
+            ¡Gracias por tu compra!
+          </h3>
+          <p style="color: #6c757d; font-size: 15px; line-height: 1.6; margin: 0;">
+            Esperamos que disfrutes de tus productos.<br>
+            Tu satisfacción es nuestra prioridad.
+          </p>
+        </div>
+      </td>
+    </tr>
+    
+    <!-- OPCIONES POST-COMPRA -->
+    <tr>
+      <td style="padding: 0 40px 30px 40px;">
+        <h4 style="color: #212529; font-size: 16px; margin: 0 0 15px 0; font-weight: 600; text-align: center;">
+          ¿Qué puedes hacer ahora?
+        </h4>
+        <table width="100%" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="padding: 10px; vertical-align: top; width: 33.33%;">
+              <div style="background-color: #fff3cd; border-radius: 12px; padding: 20px; text-align: center; height: 100%;">
+                <div style="font-size: 24px; margin-bottom: 8px;">⭐</div>
+                <p style="color: #664d03; font-size: 12px; margin: 0; font-weight: 500;">Déjanos una reseña</p>
+              </div>
+            </td>
+            <td style="padding: 10px; vertical-align: top; width: 33.33%;">
+              <div style="background-color: #cfe2ff; border-radius: 12px; padding: 20px; text-align: center; height: 100%;">
+                <div style="font-size: 24px; margin-bottom: 8px;">🛒</div>
+                <p style="color: #084298; font-size: 12px; margin: 0; font-weight: 500;">Explora más productos</p>
+              </div>
+            </td>
+            <td style="padding: 10px; vertical-align: top; width: 33.33%;">
+              <div style="background-color: #f8d7da; border-radius: 12px; padding: 20px; text-align: center; height: 100%;">
+                <div style="font-size: 24px; margin-bottom: 8px;">💬</div>
+                <p style="color: #842029; font-size: 12px; margin: 0; font-weight: 500;">¿Algún problema? Contáctanos</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- FOOTER -->
+    <tr>
+      <td style="background-color: #212529; padding: 30px 40px; text-align: center;">
+        <p style="color: #ffc107; font-size: 20px; font-weight: 700; margin: 0 0 10px 0;">
+          🍷 Elixir
+        </p>
+        <p style="color: #adb5bd; font-size: 14px; margin: 0 0 15px 0;">
+          ¡Esperamos verte pronto de nuevo!
+        </p>
+        <p style="color: #6c757d; font-size: 11px; margin: 0;">
+          © 2025 Elixir Botillería - Todos los derechos reservados<br>
+          Este es un correo automático, por favor no responder directamente.
+        </p>
+      </td>
+    </tr>
+    
+  </table>
+  
+</body>
+</html>
+
+

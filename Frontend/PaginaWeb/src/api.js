@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:8000/api';
+// URL de la API - usa variable de entorno en producción
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const useApi = (endpoint) => {
   const [data, setData] = useState(null);
@@ -170,11 +171,38 @@ export const processCheckout = async (carrito) => {
       },
       body: JSON.stringify(carrito),
     });
-    
+
     if (!response.ok) throw new Error('Error en checkout');
     return await response.json();
   } catch (error) {
     console.error('Error en processCheckout:', error);
+    throw error;
+  }
+};
+
+/**
+ * Cambiar estado de un pedido
+ * @param {Object} datos - { usuario_id, pedido_id, estado }
+ */
+export const cambiarEstadoPedido = async (datos) => {
+  try {
+    const response = await fetch(`${API_URL}/cambiar-estado-pedido/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(datos),
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || 'Error al cambiar estado del pedido');
+    }
+
+    return json;
+  } catch (error) {
+    console.error('Error en cambiarEstadoPedido:', error);
     throw error;
   }
 };

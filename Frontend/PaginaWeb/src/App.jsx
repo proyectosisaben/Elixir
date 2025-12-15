@@ -23,6 +23,13 @@ import ConfirmacionPago from './pages/ConfirmacionPago';
 import ConfirmacionPagoDetalle from './pages/ConfirmacionPagoDetalle';
 import Auditoria from './pages/Auditoria';
 import AnalisisVentas from './pages/AnalisisVentas';
+import MonitoreoSistema from './pages/MonitoreoSistema';
+import AutorizacionesVendedor from './pages/AutorizacionesVendedor';
+import AutorizacionesGerente from './pages/AutorizacionesGerente';
+import DetalleCliente from './pages/DetalleCliente';
+import GestionCupones from './pages/GestionCupones';
+import GestionReclamos from './pages/GestionReclamos';
+import POS from './pages/POS';
 
 // Lazy load de dashboards nuevos (cargar bajo demanda)
 const DashboardVendedor = React.lazy(() => import('./pages/DashboardVendedor'));
@@ -52,9 +59,9 @@ function App() {
             <Route path='/perfil' element={<ProtectedRoute element={<GestionPerfil />} requiredRoles={['cliente', 'vendedor', 'gerente', 'admin_sistema']} />} />
             
             {/* Dashboard por Rol */}
-            <Route path='/dashboard' element={<ProtectedRoute element={<Dashboard />} requiredRoles={['gerente']} />} />
+            <Route path='/dashboard' element={<ProtectedRoute element={<Dashboard />} requiredRoles={['vendedor', 'gerente', 'admin_sistema']} />} />
             <Route path='/dashboard-cliente' element={<ProtectedRoute element={<GestionPerfil />} requiredRoles={['cliente']} />} />
-            <Route path='/dashboard-vendedor' element={<ProtectedRoute element={<DashboardVendedor />} requiredRoles={['vendedor', 'gerente', 'admin_sistema']} />} />
+            <Route path='/dashboard-vendedor' element={<ProtectedRoute element={<DashboardVendedor />} requiredRoles={['vendedor']} />} />
             <Route path='/dashboard-admin' element={<ProtectedRoute element={<DashboardAdmin />} requiredRoles={['admin_sistema']} />} />
 
             {/* Ruta temporal sin protección para testing */}
@@ -64,7 +71,18 @@ function App() {
             <Route path='/admin/roles' element={<ProtectedRoute element={<GestionRoles />} requiredRoles={['admin_sistema']} />} />
             <Route path='/auditoria' element={<ProtectedRoute element={<Auditoria />} requiredRoles={['gerente', 'admin_sistema']} />} />
             <Route path='/analisis-ventas' element={<ProtectedRoute element={<AnalisisVentas />} requiredRoles={['gerente', 'admin_sistema']} />} />
-            
+            <Route path='/monitoreo-sistema' element={<ProtectedRoute element={<MonitoreoSistema />} requiredRoles={['admin_sistema']} />} />
+            <Route path='/cupones' element={<ProtectedRoute element={<GestionCupones />} requiredRoles={['gerente', 'admin_sistema']} />} />
+            <Route path='/reclamos' element={<ProtectedRoute element={<GestionReclamos />} requiredRoles={['cliente', 'vendedor', 'gerente', 'admin_sistema']} />} />
+            <Route path='/pos' element={<ProtectedRoute element={<POS />} requiredRoles={['vendedor', 'gerente', 'admin_sistema']} />} />
+
+            {/* Rutas de Autorizaciones - HU 50 */}
+            <Route path='/autorizaciones/vendedor' element={<ProtectedRoute element={<AutorizacionesVendedor />} requiredRoles={['vendedor']} />} />
+            <Route path='/autorizaciones/gerente' element={<ProtectedRoute element={<AutorizacionesGerente />} requiredRoles={['gerente', 'admin_sistema']} />} />
+
+            {/* Rutas de Clientes - HU 23 */}
+            <Route path='/clientes/:clienteId' element={<ProtectedRoute element={<DetalleCliente />} requiredRoles={['vendedor', 'gerente', 'admin_sistema']} />} />
+
             {/* Rutas públicas */}
             <Route path='/blog' element={<Blog />} />
             <Route path='/atencion_cliente' element={<AtencionCliente />} />

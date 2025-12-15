@@ -435,7 +435,25 @@ Selecciona una opción o cancela.
               <FaDatabase style={{ marginRight: '10px' }} />
               Backup Sistema
             </button>
-            <button 
+            <button
+              onClick={() => navigate('/monitoreo-sistema')}
+              style={{
+                padding: '20px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#17a2b8',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateY(-3px)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              <FaServer style={{ marginRight: '10px' }} />
+              Monitoreo Sistema
+            </button>
+            <button
               onClick={handleSeguridad}
               style={{
                 padding: '20px',
