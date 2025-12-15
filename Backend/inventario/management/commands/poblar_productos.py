@@ -6,15 +6,27 @@ class Command(BaseCommand):
     help = 'Poblar base de datos con productos chilenos reales'
 
     def handle(self, *args, **options):
-        # Limpiar datos existentes usando SQL directo para evitar problemas de foreign keys
-        with connection.cursor() as cursor:
-            cursor.execute('SET FOREIGN_KEY_CHECKS=0')
-            #cursor.execute('TRUNCATE TABLE inventario_carritoitem')
-            cursor.execute('TRUNCATE TABLE inventario_producto')
-            cursor.execute('TRUNCATE TABLE inventario_productoimagen')
-            cursor.execute('TRUNCATE TABLE inventario_categoria')
-            cursor.execute('TRUNCATE TABLE inventario_proveedor')
-            cursor.execute('SET FOREIGN_KEY_CHECKS=1')
+        # Limpiar datos existentes - Compatible con PostgreSQL y MySQL
+        self.stdout.write('Limpiando datos existentes...')
+        
+        # Usar Django ORM para eliminar (más seguro y compatible)
+        try:
+            Producto.objects.all().delete()
+            self.stdout.write('Productos eliminados')
+        except Exception as e:
+            self.stdout.write(f'No se pudieron eliminar productos: {e}')
+            
+        try:
+            Categoria.objects.all().delete()
+            self.stdout.write('Categorías eliminadas')
+        except Exception as e:
+            self.stdout.write(f'No se pudieron eliminar categorías: {e}')
+            
+        try:
+            Proveedor.objects.all().delete()
+            self.stdout.write('Proveedores eliminados')
+        except Exception as e:
+            self.stdout.write(f'No se pudieron eliminar proveedores: {e}')
 
         # Crear Categorías
         vinos = Categoria.objects.create(
