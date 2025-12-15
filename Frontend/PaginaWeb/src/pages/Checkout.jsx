@@ -87,7 +87,7 @@ export default function Checkout() {
       }
       
       // Agregar usuario_id como query param como fallback
-      let url = '/api/direcciones/';
+      let url = `${window.API_BASE_URL}/api/direcciones/`;
       if (usuario?.id) {
         url += `?usuario_id=${usuario.id}`;
       }

@@ -52,7 +52,7 @@ function GestionReclamos() {
       }
 
       const queryString = queryParams.toString();
-      const url = `${API_BASE_URL}/api/reclamos/${queryString ? '?' + queryString : ''}`;
+      const url = `${window.API_BASE_URL}/api/reclamos/${queryString ? '?' + queryString : ''}`;
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json'
@@ -86,7 +86,7 @@ function GestionReclamos() {
 
   const cargarComentarios = async (reclamoId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reclamos/${reclamoId}/comentarios/?usuario_id=${usuario?.id}`, {
+      const response = await fetch(`${window.API_BASE_URL}/api/reclamos/${reclamoId}/comentarios/?usuario_id=${usuario?.id}`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -109,7 +109,7 @@ function GestionReclamos() {
 
     try {
       const url = reclamoEditando 
-        ? `${API_BASE_URL}/api/reclamos/${reclamoEditando.id}/`
+        ? `${window.API_BASE_URL}/api/reclamos/${reclamoEditando.id}/`
         : `${window.API_BASE_URL}/api/reclamos/`;
       
       const method = reclamoEditando ? 'PUT' : 'POST';
@@ -148,7 +148,7 @@ function GestionReclamos() {
     if (!nuevoComentario.trim() || !reclamoSeleccionado) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reclamos/${reclamoSeleccionado.id}/comentarios/`, {
+      const response = await fetch(`${window.API_BASE_URL}/api/reclamos/${reclamoSeleccionado.id}/comentarios/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -199,7 +199,7 @@ function GestionReclamos() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reclamos/${reclamoId}/?usuario_id=${usuario?.id}`, {
+      const response = await fetch(`${window.API_BASE_URL}/api/reclamos/${reclamoId}/?usuario_id=${usuario?.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
@@ -222,7 +222,7 @@ function GestionReclamos() {
 
   const handleCambiarEstado = async (reclamoId, nuevoEstado, resolucion = '') => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reclamos/${reclamoId}/?usuario_id=${usuario?.id}`, {
+      const response = await fetch(`${window.API_BASE_URL}/api/reclamos/${reclamoId}/?usuario_id=${usuario?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

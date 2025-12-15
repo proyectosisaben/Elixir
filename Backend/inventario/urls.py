@@ -111,6 +111,9 @@ urlpatterns = [
 
     # Endpoint para poblar datos de prueba
     path('poblar-datos/', views.poblar_datos, name='api_poblar_datos'),
+    
+    # Endpoint para aplicar migraciones faltantes
+    path('aplicar-migraciones/', views.aplicar_migraciones, name='api_aplicar_migraciones'),
 
     # Legacy URLs (redirect to home)
     path('', views.home, name='index'),

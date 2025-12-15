@@ -7779,3 +7779,111 @@ def poblar_datos(request):
             'success': False,
             'message': f'Error al poblar datos: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST', 'GET'])
+def aplicar_migraciones(request):
+    """Endpoint para aplicar migraciones SQL faltantes"""
+    from django.db import connection
+    
+    resultados = []
+    
+    try:
+        with connection.cursor() as cursor:
+            # 1. Verificar y crear tabla inventario_direccionenvio
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'inventario_direccionenvio'
+                );
+            """)
+            tabla_existe = cursor.fetchone()[0]
+            
+            if not tabla_existe:
+                cursor.execute("""
+                    CREATE TABLE inventario_direccionenvio (
+                        id BIGSERIAL PRIMARY KEY,
+                        nombre VARCHAR(100) NOT NULL,
+                        calle VARCHAR(200) NOT NULL,
+                        numero VARCHAR(20) NOT NULL,
+                        comuna VARCHAR(100) NOT NULL,
+                        ciudad VARCHAR(100) NOT NULL,
+                        region VARCHAR(50) NOT NULL,
+                        codigo_postal VARCHAR(10),
+                        telefono VARCHAR(15) NOT NULL,
+                        es_principal BOOLEAN DEFAULT FALSE,
+                        fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        fecha_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        cliente_id BIGINT NOT NULL REFERENCES inventario_cliente(id) ON DELETE CASCADE
+                    );
+                """)
+                resultados.append("Tabla inventario_direccionenvio creada")
+            else:
+                resultados.append("Tabla inventario_direccionenvio ya existe")
+            
+            # 2. Verificar y añadir columna costo_envio a inventario_pedido
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'inventario_pedido' AND column_name = 'costo_envio'
+                );
+            """)
+            columna_existe = cursor.fetchone()[0]
+            
+            if not columna_existe:
+                cursor.execute("""
+                    ALTER TABLE inventario_pedido 
+                    ADD COLUMN costo_envio DECIMAL(10,2) DEFAULT 0;
+                """)
+                resultados.append("Columna costo_envio añadida a inventario_pedido")
+            else:
+                resultados.append("Columna costo_envio ya existe")
+            
+            # 3. Verificar y añadir columna metodo_envio a inventario_pedido
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'inventario_pedido' AND column_name = 'metodo_envio'
+                );
+            """)
+            columna_existe = cursor.fetchone()[0]
+            
+            if not columna_existe:
+                cursor.execute("""
+                    ALTER TABLE inventario_pedido 
+                    ADD COLUMN metodo_envio VARCHAR(20);
+                """)
+                resultados.append("Columna metodo_envio añadida a inventario_pedido")
+            else:
+                resultados.append("Columna metodo_envio ya existe")
+            
+            # 4. Verificar y añadir columna direccion_envio_id a inventario_pedido
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'inventario_pedido' AND column_name = 'direccion_envio_id'
+                );
+            """)
+            columna_existe = cursor.fetchone()[0]
+            
+            if not columna_existe:
+                cursor.execute("""
+                    ALTER TABLE inventario_pedido 
+                    ADD COLUMN direccion_envio_id BIGINT REFERENCES inventario_direccionenvio(id) ON DELETE SET NULL;
+                """)
+                resultados.append("Columna direccion_envio_id añadida a inventario_pedido")
+            else:
+                resultados.append("Columna direccion_envio_id ya existe")
+        
+        return Response({
+            'success': True,
+            'message': 'Migraciones aplicadas correctamente',
+            'resultados': resultados
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error al aplicar migraciones: {str(e)}',
+            'resultados': resultados
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
