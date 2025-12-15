@@ -20,6 +20,7 @@ export default function Checkout() {
   
   // Estados para dirección y envío
   const [direcciones, setDirecciones] = useState([]);
+  const [cargandoDirecciones, setCargandoDirecciones] = useState(true);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState(null);
   const [mostrarFormDireccion, setMostrarFormDireccion] = useState(false);
   const [nuevaDireccion, setNuevaDireccion] = useState({
@@ -74,6 +75,7 @@ export default function Checkout() {
   }, [navigate]);
 
   const cargarDirecciones = async () => {
+    setCargandoDirecciones(true);
     try {
       // Obtener token del localStorage
       const token = localStorage.getItem('token');
@@ -100,6 +102,7 @@ export default function Checkout() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
         console.error('Error cargando direcciones:', response.status, errorData);
+        setCargandoDirecciones(false);
         return;
       }
       
@@ -113,9 +116,11 @@ export default function Checkout() {
           calcularCostoEnvio(principal.region);
         }
       }
+      setCargandoDirecciones(false);
     } catch (error) {
       console.error('Error cargando direcciones:', error);
       setErrorMsg('Error al cargar direcciones: ' + error.message);
+      setCargandoDirecciones(false);
     }
   };
 
@@ -850,8 +855,8 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Si no hay direcciones guardadas */}
-            {direcciones.length === 0 && !mostrarFormDireccion && (
+            {/* Si no hay direcciones guardadas (solo mostrar cuando ya terminó de cargar) */}
+            {!cargandoDirecciones && direcciones.length === 0 && !mostrarFormDireccion && (
               <div style={{ marginBottom: '20px' }}>
                 <p>No tienes direcciones guardadas. Por favor agrega una:</p>
                 <button
@@ -867,6 +872,13 @@ export default function Checkout() {
                 >
                   + Agregar Dirección
                 </button>
+              </div>
+            )}
+
+            {/* Mostrar loading mientras carga */}
+            {cargandoDirecciones && !mostrarFormDireccion && (
+              <div style={{ marginBottom: '20px', textAlign: 'center', padding: '20px' }}>
+                <p>Cargando direcciones...</p>
               </div>
             )}
 
