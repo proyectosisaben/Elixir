@@ -70,7 +70,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'elixir_db.wsgi.application'    # Cambiado de 'todocarro.wsgi.application'
 
 # Configuración de base de datos
-# Usa DATABASE_URL de Railway si está disponible
+# Usa DATABASE_URL de Render/Railway si está disponible
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -78,17 +78,15 @@ if DATABASE_URL:
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
 else:
+    # Base de datos local PostgreSQL para desarrollo
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'railway'),
-            'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'UseFLrFLwDmRZZRiKDqfTGEvbfkIVxUA'),
-            'HOST': os.environ.get('DB_HOST', 'caboose.proxy.rlwy.net'),
-            'PORT': os.environ.get('DB_PORT', '48510'),
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            }
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'elixir_db'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
         }
     }
 # Validadores de contraseña
