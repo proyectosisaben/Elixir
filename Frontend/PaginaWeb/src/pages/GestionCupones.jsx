@@ -51,7 +51,7 @@ function GestionCupones() {
       }
 
       const queryString = queryParams.toString();
-      const url = `http://localhost:8000/api/cupones/${queryString ? '?' + queryString : ''}`;
+      const url = `${API_BASE_URL}/api/cupones/${queryString ? '?' + queryString : ''}`;
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json'
@@ -89,8 +89,8 @@ function GestionCupones() {
 
     try {
       const url = cuponEditando 
-        ? `http://localhost:8000/api/cupones/${cuponEditando.id}/`
-        : 'http://localhost:8000/api/cupones/';
+        ? `${API_BASE_URL}/api/cupones/${cuponEditando.id}/`
+        : `${window.API_BASE_URL}/api/cupones/`;
       
       const method = cuponEditando ? 'PUT' : 'POST';
 
@@ -171,7 +171,7 @@ function GestionCupones() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/cupones/${cuponId}/?usuario_id=${usuario?.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/cupones/${cuponId}/?usuario_id=${usuario?.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'

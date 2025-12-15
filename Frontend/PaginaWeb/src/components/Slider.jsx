@@ -17,7 +17,7 @@ function Slider() {
     // Cargar slides del backend
     const cargarSliders = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/sliders/');
+        const response = await fetch(`${window.API_BASE_URL}/api/sliders/`);
         const data = await response.json();
         if (data.success && data.sliders) {
           setSlides(data.sliders);
@@ -52,7 +52,7 @@ function Slider() {
       const slidesActualizados = slides.map(s => s.id === slideEditado.id ? formData : s);
       
       // Enviar al backend
-      const response = await fetch('http://localhost:8000/api/sliders/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/sliders/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

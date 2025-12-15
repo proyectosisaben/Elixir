@@ -7,7 +7,7 @@ export function useBackendConnectivity() {
   useEffect(() => {
     const checkConnectivity = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/home/', {
+        const response = await fetch(`${window.API_BASE_URL}/api/home/`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -21,7 +21,7 @@ export function useBackendConnectivity() {
         }
       } catch (err) {
         setIsConnected(false);
-        setError('No se puede conectar al backend. Asegúrate de que esté corriendo en http://localhost:8000');
+        setError('No se puede conectar al backend. Asegúrate de que esté corriendo en ${API_BASE_URL}');
       }
     };
 

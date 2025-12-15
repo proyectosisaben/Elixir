@@ -193,7 +193,7 @@ export default function ConfirmacionPago() {
                 <h3>📱 Escanea este código QR</h3>
                 <div className="qr-container">
                   <img
-                    src="http://localhost:8000/media/productos/QR%20TRANSFERENCIAS.jpeg"
+                    src={`${window.API_BASE_URL}/media/productos/QR%20TRANSFERENCIAS.jpeg`}
                     alt="QR de transferencia"
                     className="qr-image"
                     onError={(e) => {

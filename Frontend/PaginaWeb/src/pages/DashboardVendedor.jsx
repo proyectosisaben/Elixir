@@ -55,7 +55,7 @@ function DashboardVendedor() {
       const usuarioId = usuarioData?.id;
       
       // Obtener productos reales de la botillería
-      const productosResponse = await fetch("http://localhost:8000/api/productos/");
+      const productosResponse = await fetch(`${window.API_BASE_URL}/api/productos/`);
       if (productosResponse.ok) {
         const productosData = await productosResponse.json();
         const listaProductos = productosData.productos || productosData || [];
@@ -76,7 +76,7 @@ function DashboardVendedor() {
         
         if (usuarioId) {
           try {
-            const ventasResponse = await fetch(`http://localhost:8000/api/ventas-totales/?usuario_id=${usuarioId}`);
+            const ventasResponse = await fetch(`${API_BASE_URL}/api/ventas-totales/?usuario_id=${usuarioId}`);
             if (ventasResponse.ok) {
               const ventasData = await ventasResponse.json();
               if (ventasData.success && ventasData.ventas) {
@@ -179,7 +179,7 @@ function DashboardVendedor() {
     if (formData.imagen) form.append('imagen', formData.imagen);
 
     try {
-      const response = await fetch('http://localhost:8000/api/productos/crear/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/productos/crear/`, {
         method: 'POST',
         body: form
       });
@@ -217,7 +217,7 @@ function DashboardVendedor() {
       }
 
       // Intentar actualizar stock directamente primero (solo funcionará para gerentes/admin)
-      const response = await fetch(`http://localhost:8000/api/productos/${selectedProducto.id}/actualizar-stock/`, {
+      const response = await fetch(`${API_BASE_URL}/api/productos/${selectedProducto.id}/actualizar-stock/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -271,7 +271,7 @@ function DashboardVendedor() {
         usuario_id: usuarioId
       };
 
-      const response = await fetch('http://localhost:8000/api/autorizaciones/crear/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/autorizaciones/crear/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -312,7 +312,7 @@ function DashboardVendedor() {
           return;
         }
 
-        const response = await fetch(`http://localhost:8000/api/productos/${id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/productos/${id}/`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'

@@ -14,7 +14,7 @@ function Autorizaciones() {
 
   const cargarSolicitudes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/autorizaciones/solicitudes/');
+      const response = await fetch(`${window.API_BASE_URL}/api/autorizaciones/solicitudes/`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -29,7 +29,7 @@ function Autorizaciones() {
 
   const gestionarSolicitud = async (solicitudId, accion) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/autorizaciones/${solicitudId}/gestionar/`, {
+      const response = await fetch(`${API_BASE_URL}/api/autorizaciones/${solicitudId}/gestionar/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

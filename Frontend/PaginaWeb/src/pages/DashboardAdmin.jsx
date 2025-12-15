@@ -55,7 +55,7 @@ function DashboardAdmin() {
       const headers = token ? { Authorization: `Token ${token}` } : {};
 
       // Obtener estadísticas del dashboard admin (endpoint específico)
-      const statsResponse = await fetch("http://localhost:8000/api/dashboard-admin/estadisticas/", {
+      const statsResponse = await fetch(`${window.API_BASE_URL}/api/dashboard-admin/estadisticas/`, {
         headers: headers,
         credentials: 'include'
       });
@@ -81,7 +81,7 @@ function DashboardAdmin() {
       }
 
       // Obtener lista de clientes para gestión de roles
-      const clientesResponse = await fetch("http://localhost:8000/api/listar-clientes/", {
+      const clientesResponse = await fetch(`${window.API_BASE_URL}/api/listar-clientes/`, {
         headers: headers,
         credentials: 'include'
       });
@@ -109,7 +109,7 @@ function DashboardAdmin() {
       const headers = token ? { Authorization: `Token ${token}` } : {};
 
       // Obtener lista de clientes
-      const clientesResponse = await fetch("http://localhost:8000/api/listar-clientes/", {
+      const clientesResponse = await fetch(`${window.API_BASE_URL}/api/listar-clientes/`, {
         headers: headers,
         credentials: 'include'
       });
@@ -140,7 +140,7 @@ function DashboardAdmin() {
 
         if (usuario?.id) {
           try {
-            const ventasResponse = await fetch(`http://localhost:8000/api/ventas-totales/?usuario_id=${usuario.id}`, {
+            const ventasResponse = await fetch(`${API_BASE_URL}/api/ventas-totales/?usuario_id=${usuario.id}`, {
               headers: headers,
               credentials: 'include'
             });
@@ -174,7 +174,7 @@ function DashboardAdmin() {
   const handleBackup = async () => {
     if (window.confirm("¿Estás seguro de que deseas hacer un backup de la base de datos?\n\nEsto puede tomar algunos minutos.")) {
       try {
-        const response = await fetch("http://localhost:8000/api/backup-sistema/", {
+        const response = await fetch(`${window.API_BASE_URL}/api/backup-sistema/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" }
         });

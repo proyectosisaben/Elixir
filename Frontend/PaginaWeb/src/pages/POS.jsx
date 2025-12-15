@@ -35,7 +35,7 @@ function POS() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8000/api/pos/buscar-producto/?q=${encodeURIComponent(busqueda)}&usuario_id=${usuario?.id}`,
+        `${API_BASE_URL}/api/pos/buscar-producto/?q=${encodeURIComponent(busqueda)}&usuario_id=${usuario?.id}`,
         {
           headers: {
             'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ function POS() {
         cantidad: item.cantidad
       }));
 
-      const response = await fetch('http://localhost:8000/api/pos/crear-venta/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/pos/crear-venta/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -159,7 +159,7 @@ function POS() {
     try {
       const hoy = new Date().toISOString().split('T')[0];
       const response = await fetch(
-        `http://localhost:8000/api/pos/cierre-caja/?fecha_inicio=${hoy}&fecha_fin=${hoy}&usuario_id=${usuario?.id}`,
+        `${API_BASE_URL}/api/pos/cierre-caja/?fecha_inicio=${hoy}&fecha_fin=${hoy}&usuario_id=${usuario?.id}`,
         {
           headers: {
             'Content-Type': 'application/json'

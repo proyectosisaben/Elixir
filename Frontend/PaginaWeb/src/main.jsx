@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx'
 
+// Configuración global (debe ir antes de otros imports que la usen)
+import './config.js'
+
 // Importar estilos en orden correcto
 import './styles/globals.css'
 

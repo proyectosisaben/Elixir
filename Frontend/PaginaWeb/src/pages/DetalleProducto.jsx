@@ -18,7 +18,7 @@ function DetalleProducto() {
 useEffect(() => {
   const cargarProducto = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/producto/${id}/`);
+      const response = await fetch(`${API_BASE_URL}/api/producto/${id}/`);
       if (!response.ok) throw new Error("Producto no encontrado");
       const data = await response.json();
 

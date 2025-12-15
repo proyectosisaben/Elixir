@@ -42,7 +42,7 @@ function Login() {
       console.error('Error de login:', err);
       
       if (err.message === 'Failed to fetch') {
-        setError("❌ No se puede conectar al servidor. Verifica que el backend esté corriendo en http://localhost:8000");
+        setError("❌ No se puede conectar al servidor. Verifica que el backend esté corriendo en ${API_BASE_URL}");
       } else {
         setError(err.message || "Error al iniciar sesión");
       }

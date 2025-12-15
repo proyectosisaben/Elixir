@@ -21,12 +21,12 @@ function ProductosRecomendados({ titulo = "Recomendado para ti", limite = 12, pr
       let url = '';
       
       if (productoId) {
-        url = `http://localhost:8000/api/productos/${productoId}/relacionados/?limite=${limite}`;
+        url = `${API_BASE_URL}/api/productos/${productoId}/relacionados/?limite=${limite}`;
         if (usuario && usuario.id) {
           url += `&usuario_id=${usuario.id}`;
         }
       } else {
-        url = `http://localhost:8000/api/recomendaciones/?limite=${limite}&tipo=${tipo}`;
+        url = `${API_BASE_URL}/api/recomendaciones/?limite=${limite}&tipo=${tipo}`;
         if (usuario && usuario.id && tipo === 'personalizado') {
           url += `&usuario_id=${usuario.id}`;
         }
