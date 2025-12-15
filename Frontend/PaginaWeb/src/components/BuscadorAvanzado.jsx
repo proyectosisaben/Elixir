@@ -130,13 +130,6 @@ function BuscadorAvanzado({
         });
       }
     }
-    if (filtros.precioMin !== null || filtros.precioMax !== null) {
-      chips.push({
-        id: 'precio',
-        tipo: 'precio',
-        label: `${formatearPrecio(filtros.precioMin)} - ${formatearPrecio(filtros.precioMax)}`,
-      });
-    }
     if (filtros.disponible !== null) {
       chips.push({
         id: 'disponible',
@@ -168,12 +161,6 @@ function BuscadorAvanzado({
       case 'proveedor':
         setProveedorFiltro('');
         nuevosFiltros.proveedor = '';
-        break;
-      case 'precio':
-        setPrecioMin(rangoPrecios.minimo);
-        setPrecioMax(rangoPrecios.maximo);
-        nuevosFiltros.precioMin = rangoPrecios.minimo;
-        nuevosFiltros.precioMax = rangoPrecios.maximo;
         break;
       case 'disponible':
         setDisponible(null);
@@ -344,53 +331,6 @@ function BuscadorAvanzado({
             </select>
           </div>
         )}
-
-        {/* Filtro de Rango de Precio */}
-        <div className="filtro-seccion">
-          <h3 className="filtro-titulo">Rango de Precio</h3>
-          <div className="rango-precio-inputs">
-            <input
-              type="number"
-              className="input-precio"
-              placeholder="Mín"
-              value={precioMin}
-              onChange={(e) => {
-                const valor = parseInt(e.target.value) || 0;
-                setPrecioMin(valor);
-                aplicarFiltros({
-                  busqueda,
-                  categorias: categoriasFiltro,
-                  proveedor: proveedorFiltro,
-                  precioMin: valor,
-                  precioMax,
-                  disponible,
-                });
-              }}
-            />
-            <span className="separador-precio">-</span>
-            <input
-              type="number"
-              className="input-precio"
-              placeholder="Máx"
-              value={precioMax}
-              onChange={(e) => {
-                const valor = parseInt(e.target.value) || 0;
-                setPrecioMax(valor);
-                aplicarFiltros({
-                  busqueda,
-                  categorias: categoriasFiltro,
-                  proveedor: proveedorFiltro,
-                  precioMin,
-                  precioMax: valor,
-                  disponible,
-                });
-              }}
-            />
-          </div>
-          <div className="precio-display">
-            {formatearPrecio(precioMin)} - {formatearPrecio(precioMax)}
-          </div>
-        </div>
 
         {/* Filtro de Disponibilidad */}
         <div className="filtro-seccion">

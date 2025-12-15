@@ -68,13 +68,14 @@ export default function Checkout() {
       }
     }
 
-    cargarDirecciones();
+    // Pasar usuario directamente a cargarDirecciones
+    cargarDirecciones(usuarioParsed);
     cargarMetodosEnvio();
     cargarRegionesComunas();
     setLoading(false);
   }, [navigate]);
 
-  const cargarDirecciones = async () => {
+  const cargarDirecciones = async (usuarioParam = null) => {
     setCargandoDirecciones(true);
     try {
       // Obtener token del localStorage
@@ -88,10 +89,13 @@ export default function Checkout() {
         headers['Authorization'] = `Token ${token}`;
       }
       
-      // Agregar usuario_id como query param como fallback
+      // Usar el usuario pasado como parámetro o el del estado
+      const usuarioParaUsar = usuarioParam || usuario;
+      
+      // Agregar usuario_id como query param
       let url = `${window.API_BASE_URL}/api/direcciones/`;
-      if (usuario?.id) {
-        url += `?usuario_id=${usuario.id}`;
+      if (usuarioParaUsar?.id) {
+        url += `?usuario_id=${usuarioParaUsar.id}`;
       }
       
       const response = await fetch(url, {
