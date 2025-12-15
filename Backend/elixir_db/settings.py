@@ -52,7 +52,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'frontend/build'),
+            os.path.join(BASE_DIR, 'frontend', 'build'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -122,15 +122,21 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Solo agregar STATICFILES_DIRS si el directorio existe
+# Directorios de archivos estáticos
+STATICFILES_DIRS = []
 _static_dir = os.path.join(BASE_DIR, 'static')
+_frontend_assets = os.path.join(BASE_DIR, 'frontend', 'build', 'assets')
+
 if os.path.exists(_static_dir):
-    STATICFILES_DIRS = [_static_dir]
-else:
-    STATICFILES_DIRS = []
+    STATICFILES_DIRS.append(_static_dir)
+if os.path.exists(_frontend_assets):
+    STATICFILES_DIRS.append(_frontend_assets)
 
 # Whitenoise para servir archivos estáticos en producción
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Ruta del frontend buildeado
+FRONTEND_BUILD_DIR = os.path.join(BASE_DIR, 'frontend', 'build')
 
 # Archivos media (subida de imágenes, documentos)
 MEDIA_URL = '/media/'
