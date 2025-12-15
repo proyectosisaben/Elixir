@@ -31,7 +31,7 @@ export default function GestionPerfil() {
 
   const cargarPerfil = async (usuarioId) => {
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/mi-perfil/?usuario_id=${usuarioId}`);
+      const response = await fetch(`${window.API_BASE_URL}/api/mi-perfil/?usuario_id=${usuarioId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -49,7 +49,7 @@ export default function GestionPerfil() {
 
   const cargarPedidos = async (usuarioId) => {
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/mis-pedidos/?usuario_id=${usuarioId}`);
+      const response = await fetch(`${window.API_BASE_URL}/api/mis-pedidos/?usuario_id=${usuarioId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -73,7 +73,7 @@ export default function GestionPerfil() {
   const handleActualizarPerfil = async () => {
     try {
       setLoading(true);
-      const response = await fetch("${window.API_BASE_URL}/api/mi-perfil/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/mi-perfil/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

@@ -26,7 +26,7 @@ function MonitoreoSistema() {
 
   const cargarEstadisticas = async () => {
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/sistema/estadisticas/?user_id=${usuario?.id}`);
+      const response = await fetch(`${window.API_BASE_URL}/api/sistema/estadisticas/?user_id=${usuario?.id}`);
       const data = await response.json();
 
       if (response.ok && data.success) {

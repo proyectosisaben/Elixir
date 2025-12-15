@@ -26,7 +26,7 @@ const ReportesFinancieros = () => {
   const cargarReportes = async () => {
     setCargando(true);
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/reportes/listar/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/reportes/listar/', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -49,7 +49,7 @@ const ReportesFinancieros = () => {
   // Cargar categorías
   const cargarCategorias = async () => {
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/catalogo/?limit=1000', {
+      const response = await fetch(`${window.API_BASE_URL}/api/catalogo/?limit=1000', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -99,7 +99,7 @@ const ReportesFinancieros = () => {
         enviar_email: filtros.enviar_email
       };
 
-      const response = await fetch("${window.API_BASE_URL}/api/reportes/generar/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/reportes/generar/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -148,7 +148,7 @@ const ReportesFinancieros = () => {
     }
 
     try {
-      const response = await fetch("${window.API_BASE_URL}/api/reportes/${reporteId}/eliminar/`, {
+      const response = await fetch(`${window.API_BASE_URL}/api/reportes/${reporteId}/eliminar/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

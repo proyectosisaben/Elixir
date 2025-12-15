@@ -23,7 +23,7 @@ function NotificacionesAutorizaciones() {
 
     try {
       setLoading(true);
-      const response = await fetch("${window.API_BASE_URL}/api/autorizaciones/notificaciones/?user_id=${usuario.id}`);
+      const response = await fetch(`${window.API_BASE_URL}/api/autorizaciones/notificaciones/?user_id=${usuario.id}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
