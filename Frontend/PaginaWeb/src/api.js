@@ -3,8 +3,11 @@
 
 import { useState, useEffect } from 'react';
 
-// URL de la API - usa variable de entorno en producción
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// URL de la API - detecta producción automáticamente
+const isProduction = window.location.hostname.includes('onrender.com');
+const API_URL = isProduction 
+  ? 'https://elixir-pk6r.onrender.com/api' 
+  : (import.meta.env.VITE_API_URL || '/api');
 
 export const useApi = (endpoint) => {
   const [data, setData] = useState(null);
