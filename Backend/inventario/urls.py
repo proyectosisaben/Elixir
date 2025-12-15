@@ -109,6 +109,9 @@ urlpatterns = [
     path('envio/calcular-costo/', views.calcular_costo_envio, name='api_calcular_costo_envio'),
     path('envio/metodos/', views.obtener_metodos_envio, name='api_metodos_envio'),
 
+    # Endpoint para poblar datos de prueba
+    path('poblar-datos/', views.poblar_datos, name='api_poblar_datos'),
+
     # Legacy URLs (redirect to home)
     path('', views.home, name='index'),
 ]

@@ -7674,3 +7674,108 @@ def obtener_metodos_envio(request):
         'success': True,
         'metodos': [{'codigo': m[0], 'nombre': m[1]} for m in METODOS_ENVIO]
     })
+
+
+@api_view(['POST', 'GET'])
+def poblar_datos(request):
+    """Endpoint para poblar la base de datos con datos de prueba"""
+    try:
+        # Crear Categorías
+        categorias_data = [
+            {"nombre": "Vinos", "descripcion": "Vinos tintos, blancos y rosé de valles chilenos", "activa": True},
+            {"nombre": "Cervezas", "descripcion": "Cervezas nacionales e importadas", "activa": True},
+            {"nombre": "Piscos", "descripcion": "Piscos chilenos premium y reservados", "activa": True},
+            {"nombre": "Whiskys", "descripcion": "Whiskys escoceses, americanos y premium", "activa": True},
+            {"nombre": "Ron", "descripcion": "Rones añejos, blancos y especiales", "activa": True},
+        ]
+        
+        categorias = {}
+        for cat_data in categorias_data:
+            cat, created = Categoria.objects.get_or_create(
+                nombre=cat_data['nombre'],
+                defaults=cat_data
+            )
+            categorias[cat_data['nombre']] = cat
+
+        # Crear Proveedores
+        proveedores_data = [
+            {"nombre": "Viñas Chilenas SA", "rut": "76543210-9", "email": "ventas@vinaschilenas.cl", "telefono": "+56912345678", "direccion": "Santiago, Chile", "activo": True},
+            {"nombre": "Distribuidora Licores Premium", "rut": "87654321-0", "email": "contacto@licores.cl", "telefono": "+56987654321", "direccion": "Valparaíso, Chile", "activo": True},
+            {"nombre": "Pisquera Nacional Chile", "rut": "98765432-1", "email": "ventas@pisqueranacional.cl", "telefono": "+56976543210", "direccion": "La Serena, Chile", "activo": True},
+        ]
+        
+        proveedores = {}
+        for prov_data in proveedores_data:
+            prov, created = Proveedor.objects.get_or_create(
+                rut=prov_data['rut'],
+                defaults=prov_data
+            )
+            proveedores[prov_data['nombre']] = prov
+
+        # Productos
+        productos_data = [
+            # Vinos
+            {'nombre': 'Vino Santa Rita 120 Cabernet Sauvignon', 'sku': 'VIN-001', 'precio': 4990, 'costo': 3500, 'stock': 45, 'descripcion': 'Vino tinto reserva del Valle Central.', 'categoria': 'Vinos', 'proveedor': 'Viñas Chilenas SA'},
+            {'nombre': 'Vino Casillero del Diablo Carmenere', 'sku': 'VIN-002', 'precio': 5990, 'costo': 4200, 'stock': 32, 'descripcion': 'Vino tinto premium con notas especiadas.', 'categoria': 'Vinos', 'proveedor': 'Viñas Chilenas SA'},
+            {'nombre': 'Vino Concha y Toro Frontera Merlot', 'sku': 'VIN-003', 'precio': 3790, 'costo': 2650, 'stock': 68, 'descripcion': 'Vino tinto suave y frutal.', 'categoria': 'Vinos', 'proveedor': 'Viñas Chilenas SA'},
+            {'nombre': 'Vino Undurraga Reserva', 'sku': 'VIN-004', 'precio': 7990, 'costo': 5500, 'stock': 25, 'descripcion': 'Vino premium reserva especial.', 'categoria': 'Vinos', 'proveedor': 'Viñas Chilenas SA'},
+            {'nombre': 'Vino Sol de Chile Sauvignon Blanc', 'sku': 'VIN-005', 'precio': 5390, 'costo': 3770, 'stock': 38, 'descripcion': 'Vino blanco fresco y cítrico.', 'categoria': 'Vinos', 'proveedor': 'Viñas Chilenas SA'},
+            # Cervezas
+            {'nombre': 'Cerveza Cristal Lata 350ml', 'sku': 'CER-001', 'precio': 1200, 'costo': 850, 'stock': 180, 'descripcion': 'Cerveza lager chilena clásica.', 'categoria': 'Cervezas', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Cerveza Escudo Botella 330ml', 'sku': 'CER-002', 'precio': 1350, 'costo': 950, 'stock': 150, 'descripcion': 'Cerveza lager premium chilena.', 'categoria': 'Cervezas', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Cerveza Kunstmann Pale Lager', 'sku': 'CER-003', 'precio': 2190, 'costo': 1530, 'stock': 95, 'descripcion': 'Cerveza artesanal de Valdivia.', 'categoria': 'Cervezas', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Cerveza Heineken Lata 500ml', 'sku': 'CER-004', 'precio': 1890, 'costo': 1320, 'stock': 120, 'descripcion': 'Cerveza premium importada.', 'categoria': 'Cervezas', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Cerveza Corona Extra 355ml', 'sku': 'CER-005', 'precio': 1590, 'costo': 1100, 'stock': 100, 'descripcion': 'Cerveza mexicana refrescante.', 'categoria': 'Cervezas', 'proveedor': 'Distribuidora Licores Premium'},
+            # Piscos
+            {'nombre': 'Pisco Capel 35° 750ml', 'sku': 'PIS-001', 'precio': 7500, 'costo': 5250, 'stock': 75, 'descripcion': 'Pisco tradicional del Valle del Elqui.', 'categoria': 'Piscos', 'proveedor': 'Pisquera Nacional Chile'},
+            {'nombre': 'Pisco Alto del Carmen 40° 750ml', 'sku': 'PIS-002', 'precio': 11990, 'costo': 8400, 'stock': 42, 'descripcion': 'Pisco premium transparente.', 'categoria': 'Piscos', 'proveedor': 'Pisquera Nacional Chile'},
+            {'nombre': 'Pisco Mistral Especial 35° 750ml', 'sku': 'PIS-003', 'precio': 8990, 'costo': 6300, 'stock': 58, 'descripcion': 'Pisco de uvas moscatel.', 'categoria': 'Piscos', 'proveedor': 'Pisquera Nacional Chile'},
+            {'nombre': 'Pisco Control 40° 1L', 'sku': 'PIS-004', 'precio': 9990, 'costo': 7000, 'stock': 65, 'descripcion': 'Pisco doble destilado.', 'categoria': 'Piscos', 'proveedor': 'Pisquera Nacional Chile'},
+            # Whiskys
+            {'nombre': 'Whisky Johnnie Walker Red Label', 'sku': 'WHI-001', 'precio': 18900, 'costo': 13230, 'stock': 32, 'descripcion': 'Whisky escocés blend clásico.', 'categoria': 'Whiskys', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Whisky Johnnie Walker Black Label', 'sku': 'WHI-002', 'precio': 25990, 'costo': 18200, 'stock': 28, 'descripcion': 'Whisky escocés 12 años.', 'categoria': 'Whiskys', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Whisky Jack Daniels Old No.7', 'sku': 'WHI-003', 'precio': 24990, 'costo': 17500, 'stock': 24, 'descripcion': 'Whisky Tennessee americano.', 'categoria': 'Whiskys', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Whisky Ballantines Finest', 'sku': 'WHI-004', 'precio': 9990, 'costo': 7000, 'stock': 45, 'descripcion': 'Whisky escocés blend accesible.', 'categoria': 'Whiskys', 'proveedor': 'Distribuidora Licores Premium'},
+            # Rones
+            {'nombre': 'Ron Bacardi Carta Blanca 750ml', 'sku': 'RON-001', 'precio': 7790, 'costo': 5450, 'stock': 65, 'descripcion': 'Ron blanco para cócteles.', 'categoria': 'Ron', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Ron Havana Club Añejo', 'sku': 'RON-002', 'precio': 8990, 'costo': 6300, 'stock': 42, 'descripcion': 'Ron cubano auténtico.', 'categoria': 'Ron', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Ron Captain Morgan Spiced', 'sku': 'RON-003', 'precio': 12990, 'costo': 9000, 'stock': 35, 'descripcion': 'Ron especiado caribeño.', 'categoria': 'Ron', 'proveedor': 'Distribuidora Licores Premium'},
+            {'nombre': 'Ron Flor de Caña 7 Años', 'sku': 'RON-004', 'precio': 15990, 'costo': 11000, 'stock': 28, 'descripcion': 'Ron nicaragüense premium.', 'categoria': 'Ron', 'proveedor': 'Distribuidora Licores Premium'},
+        ]
+        
+        productos_creados = 0
+        for prod_data in productos_data:
+            categoria = categorias.get(prod_data['categoria'])
+            proveedor = proveedores.get(prod_data['proveedor'])
+            
+            if categoria and proveedor:
+                prod, created = Producto.objects.get_or_create(
+                    sku=prod_data['sku'],
+                    defaults={
+                        'nombre': prod_data['nombre'],
+                        'precio': prod_data['precio'],
+                        'costo': prod_data['costo'],
+                        'stock': prod_data['stock'],
+                        'descripcion': prod_data['descripcion'],
+                        'categoria': categoria,
+                        'proveedor': proveedor,
+                        'activo': True
+                    }
+                )
+                if created:
+                    productos_creados += 1
+
+        return Response({
+            'success': True,
+            'message': f'Base de datos poblada exitosamente',
+            'categorias': len(categorias),
+            'proveedores': len(proveedores),
+            'productos_creados': productos_creados,
+            'productos_totales': Producto.objects.count()
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error al poblar datos: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
