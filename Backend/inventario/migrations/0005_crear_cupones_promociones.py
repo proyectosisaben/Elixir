@@ -7,34 +7,40 @@ import django.db.models.deletion
 
 
 def crear_tablas_si_no_existen(apps, schema_editor):
-    """Crea las tablas solo si no existen"""
+    """Crea las tablas solo si no existen - Compatible con PostgreSQL y MySQL"""
     db = schema_editor.connection
+    
+    def tabla_existe(cursor, nombre_tabla):
+        """Verifica si una tabla existe de forma compatible con PostgreSQL y MySQL"""
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = %s
+            )
+        """, [nombre_tabla])
+        return cursor.fetchone()[0]
     
     with db.cursor() as cursor:
         # Verificar y crear PromocionProducto
-        cursor.execute("SHOW TABLES LIKE 'inventario_promocionproducto'")
-        if not cursor.fetchone():
+        if not tabla_existe(cursor, 'inventario_promocionproducto'):
             print("Creando tabla inventario_promocionproducto...")
         else:
             print("Tabla inventario_promocionproducto ya existe, omitiendo...")
         
         # Verificar y crear LogSistema
-        cursor.execute("SHOW TABLES LIKE 'inventario_logsistema'")
-        if not cursor.fetchone():
+        if not tabla_existe(cursor, 'inventario_logsistema'):
             print("Creando tabla inventario_logsistema...")
         else:
             print("Tabla inventario_logsistema ya existe, omitiendo...")
         
         # Verificar y crear EstadisticaVisita
-        cursor.execute("SHOW TABLES LIKE 'inventario_estadisticavisita'")
-        if not cursor.fetchone():
+        if not tabla_existe(cursor, 'inventario_estadisticavisita'):
             print("Creando tabla inventario_estadisticavisita...")
         else:
             print("Tabla inventario_estadisticavisita ya existe, omitiendo...")
         
         # Verificar y crear Cupon
-        cursor.execute("SHOW TABLES LIKE 'inventario_cupon'")
-        if not cursor.fetchone():
+        if not tabla_existe(cursor, 'inventario_cupon'):
             print("Creando tabla inventario_cupon...")
         else:
             print("Tabla inventario_cupon ya existe, omitiendo...")

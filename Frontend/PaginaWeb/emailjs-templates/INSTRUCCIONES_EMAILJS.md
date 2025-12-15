@@ -131,3 +131,5 @@ Puedes previsualizar los templates abriendo los archivos `.html` directamente en
 - **Error de autenticación:** Verifica que la contraseña de aplicación sea correcta
 
 
+
+
