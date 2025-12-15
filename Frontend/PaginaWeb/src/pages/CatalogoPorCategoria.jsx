@@ -72,7 +72,7 @@ function CatalogoPorCategoria() {
           setRangoPrecios(data.rango_precios);
         }
         
-        // Seleccionar la primera categor�a por defecto
+        // Seleccionar la primera categoría por defecto
         if (data.categorias?.length > 0) {
           setCategoriaSeleccionada(data.categorias[0].id);
         }
@@ -181,7 +181,7 @@ function CatalogoPorCategoria() {
   };
 
   const handleEliminarProducto = async (productoId) => {
-    if (!window.confirm('�Est�s seguro de que deseas eliminar este producto?')) {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       return;
     }
 
@@ -308,7 +308,7 @@ function CatalogoPorCategoria() {
 
   return (
     <div className="container-fluid py-5" style={{ backgroundColor: 'var(--light-bg)' }}>
-        {/* Bot�n para crear producto - Solo Admin Sistema */}
+        {/* Botón para crear producto - Solo Admin Sistema */}
         {usuario?.rol === 'admin_sistema' && (
           <div className="mb-4" style={{ marginTop: '20px' }}>
             <button
@@ -333,7 +333,7 @@ function CatalogoPorCategoria() {
           </div>
         )}
 
-        {/* Modal de Creaci�n */}
+        {/* Modal de Creación */}
         {creando && (
           <div style={{
             position: 'fixed',
@@ -378,7 +378,7 @@ function CatalogoPorCategoria() {
               </div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Descripci�n:</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Descripción:</label>
                 <textarea
                   value={formDataNuevo.descripcion || ''}
                   onChange={(e) => setFormDataNuevo({...formDataNuevo, descripcion: e.target.value})}
@@ -392,7 +392,7 @@ function CatalogoPorCategoria() {
                     fontFamily: 'inherit',
                     boxSizing: 'border-box'
                   }}
-                  placeholder="Ingrese la descripci�n del producto"
+                  placeholder="Ingrese la descripción del producto"
                 />
               </div>
 
@@ -460,7 +460,7 @@ function CatalogoPorCategoria() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Stock M�nimo:</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Stock Mínimo:</label>
                   <input
                     type="number"
                     value={formDataNuevo.stock_minimo || ''}
@@ -474,7 +474,7 @@ function CatalogoPorCategoria() {
                       fontSize: '1rem',
                       boxSizing: 'border-box'
                     }}
-                    placeholder="Stock m�nimo (default: 5)"
+                    placeholder="Stock mínimo (default: 5)"
                     required
                   />
                 </div>
@@ -499,7 +499,7 @@ function CatalogoPorCategoria() {
               </div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Categor�a:</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Categoría:</label>
                 <select
                   value={formDataNuevo.categoria_id || 1}
                   onChange={(e) => setFormDataNuevo({...formDataNuevo, categoria_id: parseInt(e.target.value)})}
@@ -554,7 +554,7 @@ function CatalogoPorCategoria() {
           </div>
         )}
 
-      {/* Modal de edición */}
+      {/* Modal de ediciÃ³n */}
       {editando && (
         <div style={{
           position: 'fixed',
@@ -598,7 +598,7 @@ function CatalogoPorCategoria() {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Descripción:</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>DescripciÃ³n:</label>
               <textarea
                 value={formData.descripcion || ''}
                 onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
@@ -670,7 +670,7 @@ function CatalogoPorCategoria() {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Categor�a:</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--primary-color)' }}>Categoría:</label>
               <select
                 value={formData.categoria_id || 1}
                 onChange={(e) => setFormData({...formData, categoria_id: parseInt(e.target.value)})}
@@ -727,7 +727,7 @@ function CatalogoPorCategoria() {
 
       <div className="container">
         <h1 className="fw-bold mb-5 text-center" style={{ color: 'var(--primary-color)' }}>
-          <i className="fas fa-shop"></i> Cat�logo de Licores
+          <i className="fas fa-shop"></i> Catálogo de Licores
         </h1>
 
         {/* Buscador Avanzado */}
@@ -740,17 +740,17 @@ function CatalogoPorCategoria() {
           onToggleFiltrosMobile={() => setMostrarFiltrosMobile(!mostrarFiltrosMobile)}
         />
 
-        {/* Informaci�n de resultados */}
+        {/* Información de resultados */}
         {filtrosAplicados && Object.values(filtrosAplicados).some(v => v) && (
           <div className="alert alert-info mb-4">
-            <strong>Resultados:</strong> Se encontraron {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} que coinciden con tu b�squeda
+            <strong>Resultados:</strong> Se encontraron {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} que coinciden con tu búsqueda
           </div>
         )}
 
         {/* Listado de Productos */}
         {productosFiltrados.length === 0 ? (
           <div className="alert alert-warning mt-5">
-            <i className="fas fa-inbox"></i> No se encontraron productos que coincidan con tu b�squeda
+            <i className="fas fa-inbox"></i> No se encontraron productos que coincidan con tu búsqueda
           </div>
         ) : (
           <div className="row g-4">

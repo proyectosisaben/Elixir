@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 MAILERSEND_API_KEY = os.environ.get('MAILERSEND_API_KEY', '')
 MAILERSEND_API_URL = 'https://api.mailersend.com/v1/email'
 MAILERSEND_TEMPLATE_CONFIRMACION = 'pr9084z6y1mlw63d'
-MAILERSEND_FROM_EMAIL = 'info@trial-3z0vklo7zo0g7qrx.mlsender.net'  # Dominio de prueba de MailerSend
+MAILERSEND_FROM_EMAIL = 'info@test-86org8ekp61gew13.mlsender.net'  # Dominio de prueba de MailerSend
 MAILERSEND_FROM_NAME = 'Elixir Botillería'
 
 
