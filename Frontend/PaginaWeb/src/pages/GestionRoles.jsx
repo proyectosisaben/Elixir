@@ -55,7 +55,7 @@ function GestionRoles() {
 
     setActualizando(true);
     try {
-      const response = await fetch(`${window.API_BASE_URL}/api/cambiar-rol/", {
+      const response = await fetch(`${window.API_BASE_URL}/api/cambiar-rol/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

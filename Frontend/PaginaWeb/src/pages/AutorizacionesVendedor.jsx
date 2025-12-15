@@ -64,7 +64,7 @@ function AutorizacionesVendedor() {
 
   const cargarProductos = async () => {
     try {
-      const response = await fetch(`${window.API_BASE_URL}/api/productos/');
+      const response = await fetch(`${window.API_BASE_URL}/api/productos/`);
       const data = await response.json();
       if (response.ok) {
         setProductos(data.productos || []);
@@ -118,7 +118,7 @@ function AutorizacionesVendedor() {
         user_id: usuario.id  // Agregar user_id para autenticación
       };
 
-      const response = await fetch(`${window.API_BASE_URL}/api/autorizaciones/crear/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/autorizaciones/crear/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

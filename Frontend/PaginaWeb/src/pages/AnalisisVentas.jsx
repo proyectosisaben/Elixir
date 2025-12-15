@@ -135,7 +135,7 @@ function AnalisisVentas() {
       
       // Cargar categorías
       try {
-        const catResponse = await fetch(`${window.API_BASE_URL}/api/categorias/');
+        const catResponse = await fetch(`${window.API_BASE_URL}/api/categorias/`);
         console.log('Respuesta categorías status:', catResponse.status);
         if (catResponse.ok) {
           const catData = await catResponse.json();
@@ -152,7 +152,7 @@ function AnalisisVentas() {
 
       // Cargar productos
       try {
-        const prodResponse = await fetch(`${window.API_BASE_URL}/api/productos-lista/');
+        const prodResponse = await fetch(`${window.API_BASE_URL}/api/productos-lista/`);
         console.log('Respuesta productos status:', prodResponse.status);
         if (prodResponse.ok) {
           const prodData = await prodResponse.json();

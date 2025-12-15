@@ -73,7 +73,7 @@ export default function GestionPerfil() {
   const handleActualizarPerfil = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${window.API_BASE_URL}/api/mi-perfil/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/mi-perfil/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

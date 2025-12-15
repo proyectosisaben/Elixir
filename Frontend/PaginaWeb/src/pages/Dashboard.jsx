@@ -198,7 +198,7 @@ function Dashboard() {
       // Buscar datos del pedido para el email
       const pedidoActual = pedidos.find(p => p.id === pedidoId);
       
-      const response = await fetch(`${window.API_BASE_URL}/api/cambiar-estado-pedido/', {
+      const response = await fetch(`${window.API_BASE_URL}/api/cambiar-estado-pedido/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +247,7 @@ function Dashboard() {
 
       // Obtener datos del endpoint dashboard-admin
       const dashboardResponse = await fetch(`${window.API_BASE_URL}/api/dashboard-admin/?usuario_id=${usuario?.id || 1}`);
-      const productosResponse = await fetch(`${window.API_BASE_URL}/api/productos/");
+      const productosResponse = await fetch(`${window.API_BASE_URL}/api/productos/`);
 
       let dashboardData = null;
       if (dashboardResponse.ok) {
