@@ -15,7 +15,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-elixir-botilleria-202
 # DEBUG = False en producción
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,.railway.app').split(',')
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -164,8 +164,9 @@ FRONTEND_URL_ENV = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL_ENV:
     CORS_ALLOWED_ORIGINS.append(FRONTEND_URL_ENV)
 
-# Permitir todos los orígenes de Railway en producción
+# Permitir todos los orígenes de Render y Railway en producción
 CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.onrender\.com$",
     r"^https://.*\.railway\.app$",
     r"^https://.*\.up\.railway\.app$",
 ]
@@ -189,4 +190,4 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = False  # Railway maneja SSL
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.railway.app').split(',')
+    CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com,https://*.railway.app').split(',')
