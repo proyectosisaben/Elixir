@@ -56,6 +56,9 @@ class EmailPedidoService:
             'X-Requested-With': 'XMLHttpRequest'
         }
         
+        # Obtener subject de los datos de personalización
+        subject = personalization_data.get('subject', 'Confirmación de Pedido - Elixir')
+        
         payload = {
             'from': {
                 'email': MAILERSEND_FROM_EMAIL,
@@ -67,6 +70,7 @@ class EmailPedidoService:
                     'name': to_name
                 }
             ],
+            'subject': subject,
             'template_id': template_id,
             'personalization': [
                 {
@@ -122,6 +126,7 @@ class EmailPedidoService:
             
             # Datos para personalización del template
             personalization_data = {
+                'subject': f'✅ Pedido {pedido.numero_pedido} Confirmado - Elixir',
                 'to_name': user.get_full_name() or user.username or user.email.split('@')[0],
                 'numero_pedido': pedido.numero_pedido,
                 'fecha_pedido': pedido.fecha_pedido.strftime('%d/%m/%Y a las %H:%M'),
