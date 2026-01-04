@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Slider from "../components/Slider";
 import { useNavigate } from "react-router-dom";
+import { useRol } from "../contexts/RolContext";
 import "../styles/globals.css";
 
 function Home() {
   const navigate = useNavigate();
+  const { usuario } = useRol();
   const [carrito, setCarrito] = useState(() => {
     const saved = localStorage.getItem('carrito');
     return saved ? JSON.parse(saved) : [];

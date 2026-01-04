@@ -2,11 +2,14 @@
 import { useNavigate } from 'react-router-dom';
 import { fetchProductos } from '../api';
 import { useRol } from '../contexts/RolContext';
+import BuscadorAvanzado from '../components/BuscadorAvanzado';
+import { construirParametrosQueryFiltros } from '../utils/filtrosUtils';
 import "../styles/globals.css";
 
 function CatalogoPorCategoria() {
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,6 +19,20 @@ function CatalogoPorCategoria() {
     const saved = localStorage.getItem('carrito');
     return saved ? JSON.parse(saved) : [];
   });
+  
+  // Estados para filtros avanzados
+  const [filtrosAplicados, setFiltrosAplicados] = useState({
+    busqueda: '',
+    categorias: [],
+    proveedor: null,
+    precioMin: null,
+    precioMax: null,
+    disponible: null,
+  });
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [mostrarFiltrosMobile, setMostrarFiltrosMobile] = useState(false);
+  const [rangoPrecios, setRangoPrecios] = useState({ minimo: 0, maximo: 1000000 });
+  
   const [categoriasList, setCategoriasList] = useState([
     { id: 1, nombre: 'Vinos' },
     { id: 2, nombre: 'Cervezas' },
@@ -42,16 +59,22 @@ function CatalogoPorCategoria() {
     const obtenerProductos = async () => {
       try {
         setLoading(true);
-        const data = await fetchProductos();
+        const response = await fetch('/api/catalogo/');
+        const data = await response.json();
+        
         setProductos(data.productos || []);
+        setCategorias(data.categorias || []);
+        setProveedores(data.proveedores || []);
+        setProductosFiltrados(data.productos || []);
         
-        // Extraer categorÃ­as Ãºnicas
-        const cats = [...new Set(data.productos.map(p => p.categoria?.nombre))];
-        setCategorias(cats.sort());
+        // Calcular rango de precios
+        if (data.rango_precios) {
+          setRangoPrecios(data.rango_precios);
+        }
         
-        // Seleccionar la primera categorÃ­a por defecto
-        if (cats.length > 0) {
-          setCategoriaSeleccionada(cats[0]);
+        // Seleccionar la primera categoría por defecto
+        if (data.categorias?.length > 0) {
+          setCategoriaSeleccionada(data.categorias[0].id);
         }
         
         setError(null);
@@ -65,6 +88,24 @@ function CatalogoPorCategoria() {
 
     obtenerProductos();
   }, []);
+
+  const handleFiltrosChange = async (filtros) => {
+    setFiltrosAplicados(filtros);
+    setMostrarFiltrosMobile(false);
+
+    try {
+      const queryParams = construirParametrosQueryFiltros(filtros);
+      const url = `/api/catalogo/?${queryParams}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      setProductosFiltrados(data.productos || []);
+    } catch (error) {
+      console.error('Error al filtrar productos:', error);
+      setProductosFiltrados([]);
+    }
+  };
 
   const agregarAlCarrito = (producto) => {
     const productoExistente = carrito.find(p => p.id === producto.id);
@@ -686,190 +727,170 @@ function CatalogoPorCategoria() {
 
       <div className="container">
         <h1 className="fw-bold mb-5 text-center" style={{ color: 'var(--primary-color)' }}>
-          <i className="fas fa-shop"></i> Catalogo de Licores
+          <i className="fas fa-shop"></i> Catálogo de Licores
         </h1>
 
-        {/* CategorÃ­as */}
-        <div className="row mb-5">
-          <div className="col-12">
-            <h5 className="fw-bold mb-3">Selecciona una categoria:</h5>
-            <div className="d-flex flex-wrap gap-2">
-              {categorias.map(categoria => (
-                <button
-                  key={categoria}
-                  onClick={() => setCategoriaSeleccionada(categoria)}
-                  className="btn"
-                  style={{
-                    backgroundColor: categoriaSeleccionada === categoria ? 'var(--secondary-color)' : 'white',
-                    color: categoriaSeleccionada === categoria ? 'white' : 'var(--primary-color)',
-                    border: `2px solid ${categoriaSeleccionada === categoria ? 'var(--secondary-color)' : 'var(--border-color)'}`
-                  }}
-                >
-                  <i className={getIconoCategoria(categoria)}></i> {categoria}
-                </button>
-              ))}
-            </div>
+        {/* Buscador Avanzado */}
+        <BuscadorAvanzado
+          categorias={categorias}
+          proveedores={proveedores}
+          rangoPrecios={rangoPrecios}
+          onFiltrosChange={handleFiltrosChange}
+          mostrarFiltrosMobile={mostrarFiltrosMobile}
+          onToggleFiltrosMobile={() => setMostrarFiltrosMobile(!mostrarFiltrosMobile)}
+        />
+
+        {/* Información de resultados */}
+        {filtrosAplicados && Object.values(filtrosAplicados).some(v => v) && (
+          <div className="alert alert-info mb-4">
+            <strong>Resultados:</strong> Se encontraron {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} que coinciden con tu búsqueda
           </div>
-        </div>
+        )}
 
-        {/* CategorÃ­a activa */}
-        {categoriaSeleccionada && (
-          <div>
-            <div className="mb-4">
-              <h3 className="fw-bold" style={{ color: 'var(--primary-color)' }}>
-                <i className={getIconoCategoria(categoriaSeleccionada)}></i> {categoriaSeleccionada}
-              </h3>
-              <p className="text-muted">
-                Mostrando {productosPorCategoria.length} producto{productosPorCategoria.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            {productosPorCategoria.length === 0 ? (
-              <div className="alert alert-info">
-                No hay productos en esta categoria
-              </div>
-            ) : (
-              <div className="row g-4">
-                {productosPorCategoria.map(producto => (
-                  <div key={producto.id} className="col-lg-3 col-md-4 col-sm-6">
-                    <div
-                      className="card h-100 shadow-sm"
-                      style={{
-                        transition: 'all 0.3s',
-                        cursor: 'pointer',
-                        border: `2px solid var(--border-color)`,
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      <div style={{ position: 'relative', overflow: 'hidden', height: '250px' }}>
-                        <img
-                          src={producto.imagen_url || producto.imagen}
-                          alt={producto.nombre}
-                          style={{ height: '100%', objectFit: 'cover', width: '100%' }}
-                          className="card-img-top"
-                        />
-                        {producto.stock <= 0 && (
-                          <div
+        {/* Listado de Productos */}
+        {productosFiltrados.length === 0 ? (
+          <div className="alert alert-warning mt-5">
+            <i className="fas fa-inbox"></i> No se encontraron productos que coincidan con tu búsqueda
+          </div>
+        ) : (
+          <div className="row g-4">
+            {productosFiltrados.map(producto => (
+              <div key={producto.id} className="col-lg-3 col-md-4 col-sm-6">
+                <div
+                  className="card h-100 shadow-sm"
+                  style={{
+                    transition: 'all 0.3s',
+                    cursor: 'pointer',
+                    border: `2px solid var(--border-color)`,
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{ position: 'relative', overflow: 'hidden', height: '250px' }}>
+                    <img
+                      src={producto.imagen_url || producto.imagen}
+                      alt={producto.nombre}
+                      style={{ height: '100%', objectFit: 'cover', width: '100%' }}
+                      className="card-img-top"
+                    />
+                    {producto.stock <= 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <span className="text-white fw-bold">AGOTADO</span>
+                      </div>
+                    )}
+                    {(usuario?.rol === 'vendedor' || usuario?.rol === 'admin_sistema') && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        display: 'flex',
+                        gap: '8px',
+                        flexDirection: 'column'
+                      }}>
+                        <button
+                          style={{
+                            backgroundColor: 'var(--secondary-color)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                          }}
+                          onClick={() => handleEditarProducto(producto)}
+                          title="Editar producto"
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        {usuario?.rol === 'admin_sistema' && (
+                          <button
                             style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '40px',
+                              height: '40px',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center'
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s'
                             }}
+                            onClick={() => handleEliminarProducto(producto.id)}
+                            title="Eliminar producto"
                           >
-                            <span className="text-white fw-bold">AGOTADO</span>
-                          </div>
-                        )}
-                        {(usuario?.rol === 'vendedor' || usuario?.rol === 'admin_sistema') && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            display: 'flex',
-                            gap: '8px',
-                            flexDirection: 'column'
-                          }}>
-                            <button
-                              style={{
-                                backgroundColor: 'var(--secondary-color)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '40px',
-                                height: '40px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s'
-                              }}
-                              onClick={() => handleEditarProducto(producto)}
-                              title="Editar producto"
-                            >
-                              <i className="fas fa-edit"></i>
-                            </button>
-                            {usuario?.rol === 'admin_sistema' && (
-                              <button
-                                style={{
-                                  backgroundColor: '#dc3545',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '50%',
-                                  width: '40px',
-                                  height: '40px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s'
-                                }}
-                                onClick={() => handleEliminarProducto(producto.id)}
-                                title="Eliminar producto"
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            )}
-                          </div>
+                            <i className="fas fa-trash"></i>
+                          </button>
                         )}
                       </div>
-                      <div className="card-body d-flex flex-column">
-                        <h5 className="card-title" style={{ color: 'var(--primary-color)' }}>{producto.nombre}</h5>
-                        <p className="card-text text-muted small">
-                          {producto.descripcion?.substring(0, 80)}...
-                        </p>
-                        <div className="mb-3">
-                          {producto.stock > 0 ? (
-                            <span className="badge" style={{ backgroundColor: 'var(--success-color)' }}>Stock: {producto.stock}</span>
-                          ) : (
-                            <span className="badge" style={{ backgroundColor: 'var(--danger-color)' }}>Agotado</span>
-                          )}
-                        </div>
-                        <p className="fw-bold fs-5 mb-3" style={{ color: 'var(--secondary-color)' }}>
-                          ${producto.precio ? producto.precio.toLocaleString('es-CL') : '0'}
-                        </p>
-                        <div className="gap-2 d-flex mt-auto">
-                          <button
-                            className="btn btn-sm flex-grow-1"
-                            style={{
-                              color: 'var(--primary-color)',
-                              border: `2px solid var(--primary-color)`,
-                              backgroundColor: 'white'
-                            }}
-                            onClick={() => navigate(`/producto/${producto.id}`)}
-                          >
-                            Ver Detalle
-                          </button>
-                          <button
-                            className="btn btn-sm flex-grow-1"
-                            style={{
-                              backgroundColor: 'var(--secondary-color)',
-                              color: 'white',
-                              border: 'none'
-                            }}
-                            onClick={() => agregarAlCarrito(producto)}
-                            disabled={producto.stock <= 0}
-                          >
-                            <i className="fas fa-cart-plus"></i>
-                          </button>
-                        </div>
-                      </div>
+                    )}
+                  </div>
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title" style={{ color: 'var(--primary-color)' }}>{producto.nombre}</h5>
+                    <p className="card-text text-muted small">
+                      {producto.descripcion?.substring(0, 80)}...
+                    </p>
+                    <div className="mb-3">
+                      {producto.stock > 0 ? (
+                        <span className="badge" style={{ backgroundColor: 'var(--success-color)' }}>Stock: {producto.stock}</span>
+                      ) : (
+                        <span className="badge" style={{ backgroundColor: 'var(--danger-color)' }}>Agotado</span>
+                      )}
+                    </div>
+                    <p className="fw-bold fs-5 mb-3" style={{ color: 'var(--secondary-color)' }}>
+                      ${producto.precio ? producto.precio.toLocaleString('es-CL') : '0'}
+                    </p>
+                    <div className="gap-2 d-flex mt-auto">
+                      <button
+                        className="btn btn-sm flex-grow-1"
+                        style={{
+                          color: 'var(--primary-color)',
+                          border: `2px solid var(--primary-color)`,
+                          backgroundColor: 'white'
+                        }}
+                        onClick={() => navigate(`/producto/${producto.id}`)}
+                      >
+                        Ver Detalle
+                      </button>
+                      <button
+                        className="btn btn-sm flex-grow-1"
+                        style={{
+                          backgroundColor: 'var(--secondary-color)',
+                          color: 'white',
+                          border: 'none'
+                        }}
+                        onClick={() => agregarAlCarrito(producto)}
+                        disabled={producto.stock <= 0}
+                      >
+                        <i className="fas fa-cart-plus"></i>
+                      </button>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>
     </div>
   );
 }
-
 export default CatalogoPorCategoria;

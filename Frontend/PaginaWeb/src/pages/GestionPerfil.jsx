@@ -31,9 +31,9 @@ export default function GestionPerfil() {
 
   const cargarPerfil = async (usuarioId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/mi-perfil/?usuario_id=${usuarioId}`);
+      const response = await fetch(`/api/mi-perfil/?usuario_id=${usuarioId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setPerfil(data.perfil);
         setFormData({
@@ -49,9 +49,9 @@ export default function GestionPerfil() {
 
   const cargarPedidos = async (usuarioId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/mis-pedidos/?usuario_id=${usuarioId}`);
+      const response = await fetch(`/api/mis-pedidos/?usuario_id=${usuarioId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setPedidos(data.pedidos || []);
       }
@@ -73,7 +73,7 @@ export default function GestionPerfil() {
   const handleActualizarPerfil = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/mi-perfil/', {
+      const response = await fetch('/api/mi-perfil/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

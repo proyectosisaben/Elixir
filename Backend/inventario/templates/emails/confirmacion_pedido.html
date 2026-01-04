@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Pedido - Elixir</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a8c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+        .info-box {
+            background: #f8fafc;
+            border-left: 4px solid #1a365d;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box .label {
+            font-weight: 600;
+            color: #1a365d;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        .info-box .value {
+            font-size: 18px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th {
+            background: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        .total-row {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1a365d;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #1a365d;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        .cta-button:hover {
+            background: #0f1f3d;
+        }
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e2e8f0;
+        }
+        .badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✅ Pedido Confirmado</h1>
+            <p>Tu pedido ha sido recibido correctamente</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p class="greeting">Hola <strong>{{ cliente_nombre }}</strong>,</p>
+            
+            <p>Gracias por tu compra en <strong>Elixir</strong>. Tu pedido ha sido confirmado y pronto comenzaremos con su preparación.</p>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <div class="label">Número de Pedido</div>
+                <div class="value">{{ numero_pedido }} <span class="badge">CONFIRMADO</span></div>
+            </div>
+
+            <div class="info-box">
+                <div class="label">Código de Seguimiento</div>
+                <div class="value">{{ codigo_seguimiento }}</div>
+            </div>
+
+            <!-- Detalles del Pedido -->
+            <h3 style="color: #2d3748; margin-top: 30px;">Detalles de tu Pedido</h3>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr>
+                        <td><strong>{{ detalle.producto.nombre }}</strong></td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>${{ detalle.precio_unitario|floatformat:0 }}</td>
+                        <td>${{ detalle.subtotal|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">Total:</td>
+                        <td>${{ total|floatformat:0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                <strong>Fecha del Pedido:</strong> {{ fecha_pedido }}
+            </p>
+
+            <!-- CTA Button -->
+            <center>
+                <a href="{{ url_seguimiento }}" class="cta-button">Ver Estado de mi Pedido</a>
+            </center>
+
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                Puedes hacer seguimiento a tu pedido en cualquier momento utilizando tu código <strong>{{ codigo_seguimiento }}</strong> en nuestra plataforma de rastreo.
+            </p>
+
+            <p style="color: #666; font-size: 14px;">
+                Si tienes alguna pregunta, no dudes en contactarnos. ¡Gracias por confiar en nosotros!
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 Elixir - Todos los derechos reservados</p>
+            <p>Este es un email automático, por favor no responda directamente</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -65,11 +65,14 @@ WSGI_APPLICATION = 'elixir_db.wsgi.application'    # Cambiado de 'todocarro.wsgi
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'elixir_db',
+        'NAME': 'railway',
         'USER': 'root',
-        'PASSWORD': 'admin',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'PASSWORD': 'UseFLrFLwDmRZZRiKDqfTGEvbfkIVxUA',
+        'HOST': 'caboose.proxy.rlwy.net',
+        'PORT': '48510',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     }
 }
 # Validadores de contraseña
@@ -81,8 +84,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Email para pruebas y confirmación de usuarios
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@elixir.com'
+# Para desarrollo (los emails se muestran en la consola):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para producción con SMTP real (Gmail):
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''  # Tu email de Gmail
+EMAIL_HOST_PASSWORD = ''  # Contraseña de aplicación de Gmail (NO tu contraseña normal)
+
+DEFAULT_FROM_EMAIL = 'Elixir Botillería <no-reply@elixir.com>'
+FRONTEND_URL = 'http://localhost:3000'  # URL del frontend React
 
 # Localización y zona horaria de Chile
 LANGUAGE_CODE = 'es-cl'
@@ -118,4 +132,17 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5176",
     "http://127.0.0.1:5177",
     "http://127.0.0.1:5178",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
