@@ -1,5 +1,10 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+from urllib.parse import urlparse
+
+# Cargar variables de entorno desde .env.local
+load_dotenv(Path(__file__).resolve().parent.parent / '.env.local')
 
 # Base directory del proyecto
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -65,13 +70,14 @@ WSGI_APPLICATION = 'elixir_db.wsgi.application'    # Cambiado de 'todocarro.wsgi
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'railway',
-        'USER': 'root',
-        'PASSWORD': 'UseFLrFLwDmRZZRiKDqfTGEvbfkIVxUA',
-        'HOST': 'caboose.proxy.rlwy.net',
-        'PORT': '48510',
+        'NAME': os.getenv('MYSQL_DATABASE', 'railway'),
+        'USER': os.getenv('MYSQL_USER', 'root'),
+        'PASSWORD': os.getenv('MYSQL_PASSWORD', 'kUpXcUJhSmgEcYAzsSHSVvXpsHzYzxfQ'),
+        'HOST': os.getenv('MYSQL_HOST', 'yamabiko.proxy.rlwy.net'),
+        'PORT': os.getenv('MYSQL_PORT', '11096'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'connect_timeout': 10,
         }
     }
 }
